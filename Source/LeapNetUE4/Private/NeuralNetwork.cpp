@@ -18,9 +18,21 @@ UNeuralNetwork::UNeuralNetwork()
 void UNeuralNetwork::BeginPlay()
 {
 	Super::BeginPlay();
-
+	FString test;
 	// ...
+	for (int layer = 0; layer < this->Topology.Num(); layer++) {
+		test = FString::FromInt(layer);
+		UE_LOG(LogTemp, Warning, TEXT("Added Layer: %s"), *test);
+		neuralLayers.push_back(NeuralLayer(this->Topology[layer], this->randomiseWeights));
+	}
+
+	for (int layer = 0; layer < this->Topology.Num(); layer++) {
+		if (layer < this->Topology.Num() - 1) {
+			neuralLayers.at(layer).FeedForward(this->neuralLayers.at(layer + 1));
+		}
+	}
 	
+
 }
 
 

@@ -1,13 +1,14 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
-
+#include <vector>
 #include "CoreMinimal.h"
 #include "NN_Structs.h"
+#include "NeuralLayer.h"
 #include "Components/ActorComponent.h"
 #include "NeuralNetwork.generated.h"
 
-
+using namespace std;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class LEAPNETUE4_API UNeuralNetwork : public UActorComponent
@@ -31,5 +32,7 @@ public:
 		
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		bool randomiseWeights;
+
+	vector<NeuralLayer> neuralLayers;
 
 };
