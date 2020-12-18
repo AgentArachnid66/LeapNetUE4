@@ -21,6 +21,7 @@ struct FNeuron {
 		TArray<FSynapse> Connections;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		float value;
+	float error;
 };
 
 USTRUCT(BlueprintType)

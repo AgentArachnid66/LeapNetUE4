@@ -27,11 +27,29 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	
+	UFUNCTION(BlueprintCallable)
+		void LoadTopology(TArray<FNeuralLayer> newTopology);
+
+	UFUNCTION(BlueprintCallable)
+		void Train(TArray<float> inputs, TArray<float> targets);
+
+	UFUNCTION(BlueprintCallable)
+		void FeedForward(TArray<float> input);
+
+	UFUNCTION(CallInEditor)
+		void UpdateUI();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TArray<FNeuralLayer> Topology;
 		
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		bool randomiseWeights;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		float theta;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		float alpha;
 
 	vector<NeuralLayer> neuralLayers;
 

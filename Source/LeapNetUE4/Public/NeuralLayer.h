@@ -20,6 +20,12 @@ public:
 	FNeuralLayer layerData;
 	vector<Neuron> neurons;
 
-	void FeedForward(NeuralLayer* nextLayer);
 
+	void FeedForward(NeuralLayer &nextLayer, float theta);
+
+	void BackPropagate(NeuralLayer &prevLayer, float alpha, TArray<float> target);
+
+	void UpdateNeurons(FNeuralLayer &layerInfo, bool randomiseWeights);
+
+	void SetInputValues(TArray<float> inputs);
 };

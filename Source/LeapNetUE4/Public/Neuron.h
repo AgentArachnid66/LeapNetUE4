@@ -13,6 +13,12 @@ public:
 
 	FNeuron neuronData;
 
-	float GetActivatedValue();
+	float GetActivatedValue(float theta);
+
+	float GetDerivedValue(float theta);
+
+	void UpdateNeuronData(FNeuron &data, bool randomiseWeights);
+
+
 
 };
