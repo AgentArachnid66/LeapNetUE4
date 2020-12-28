@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "NN_Structs.h"
 #include "NeuralLayer.h"
+#include "Topologies.h"
+#include "Kismet/GameplayStatics.h"
 #include "Components/ActorComponent.h"
 #include "NeuralNetwork.generated.h"
 
@@ -28,7 +30,16 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	
 	UFUNCTION(BlueprintCallable)
-		void LoadTopology(TArray<FNeuralLayer> newTopology);
+		void LoadTopology(FString topologyName, FString slotName);
+
+	UFUNCTION(BlueprintCallable, CallInEditor)
+		void LoadTopologyDefault();
+
+	UFUNCTION(BlueprintCallable, CallInEditor)
+		void SaveCurrentTopologyDefault();
+
+	UFUNCTION(BlueprintCallable)
+		void SaveCurrentTopology(FString topologyName);
 
 	UFUNCTION(BlueprintCallable)
 		void Train(TArray<float> inputs, TArray<float> targets);
@@ -51,6 +62,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		float alpha;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FString topologyName;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FString slotName = "Test";
+
 	vector<NeuralLayer> neuralLayers;
 
+	// Save game to save topologies
+	UTopologies* topologies;
 };

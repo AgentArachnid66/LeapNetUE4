@@ -25,9 +25,10 @@ void Neuron::UpdateNeuronData(FNeuron &data, bool randomiseWeights) {
 	}
 }
 
-Neuron::Neuron(FNeuron &data, bool randomiseWeights)
+Neuron::Neuron(FNeuron &data, bool randomiseWeights, int neuronNumber)
 {
 	this->neuronData = data;
+	this->neuronNum = neuronNumber;
 	FString test;
 
 	if (randomiseWeights) {

@@ -14,16 +14,16 @@ using namespace std;
 class LEAPNETUE4_API NeuralLayer
 {
 public:
-	NeuralLayer(FNeuralLayer &layerInfo, bool randomiseWeights);
+	NeuralLayer(FNeuralLayer &layerInfo, bool randomiseWeights, int layerNumber);
 	~NeuralLayer();
 
 	FNeuralLayer layerData;
 	vector<Neuron> neurons;
+	int layerNum;
 
+	void FeedForward(NeuralLayer &nextLayer, float theta, FNeuralLayer &Topology);
 
-	void FeedForward(NeuralLayer &nextLayer, float theta);
-
-	void BackPropagate(NeuralLayer &prevLayer, float alpha, TArray<float> target);
+	void BackPropagate(NeuralLayer &prevLayer, float alpha, TArray<float> target, FNeuralLayer &prevLayerData);
 
 	void UpdateNeurons(FNeuralLayer &layerInfo, bool randomiseWeights);
 

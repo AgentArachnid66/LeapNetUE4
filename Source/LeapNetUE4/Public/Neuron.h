@@ -8,10 +8,11 @@
 class LEAPNETUE4_API Neuron
 {
 public:
-	Neuron(FNeuron &data, bool randomiseWeights);
+	Neuron(FNeuron &data, bool randomiseWeights, int neuronNumber);
 	~Neuron();
 
 	FNeuron neuronData;
+	int neuronNum;
 
 	float GetActivatedValue(float theta);
 

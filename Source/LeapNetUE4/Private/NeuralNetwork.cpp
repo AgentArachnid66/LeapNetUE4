@@ -25,7 +25,7 @@ void UNeuralNetwork::BeginPlay()
 	for (int layer = 0; layer < this->Topology.Num(); layer++) {
 		test = FString::FromInt(layer);
 		UE_LOG(LogTemp, Warning, TEXT("Added Layer: %s"), *test);
-		neuralLayers.push_back(NeuralLayer(this->Topology[layer], this->randomiseWeights));
+		neuralLayers.push_back(NeuralLayer(this->Topology[layer], this->randomiseWeights, layer));
 	}
 
 
@@ -61,7 +61,7 @@ void UNeuralNetwork::Train(TArray<float> inputs, TArray<float> targets ) {
 	for (int layer = this->Topology.Num() - 1; layer > 0; layer--) {
 		test = FString::FromInt(layer);
 		UE_LOG(LogTemp, Warning, TEXT("Layer %s Started Back Propagation"), *test);
-		neuralLayers.at(layer).BackPropagate(neuralLayers.at(layer - 1), this->alpha, inputs);
+		neuralLayers.at(layer).BackPropagate(neuralLayers.at(layer - 1), this->alpha, inputs, this->Topology[layer-1]);
 
 	}
 	
@@ -77,27 +77,95 @@ void UNeuralNetwork::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 }
 
 // Loads the topology from a struct that can be saved to a save game object.
-void UNeuralNetwork::LoadTopology(TArray<FNeuralLayer> newTopology) {
+void UNeuralNetwork::LoadTopology(FString customTopologyName, FString customSlotName) {
 	FString test;
-	// Iterates through the topology
-	for (int layer = 0; layer < newTopology.Num(); layer++) {
-		test = FString::FromInt(layer);
-		UE_LOG(LogTemp, Warning, TEXT("Added Layer: %s"), *test);
 
-		// Checks if the new topology is greater than the current one and if so then adds a new layer
-		if (layer > this->Topology.Num() - 1) {
-			neuralLayers.push_back(NeuralLayer(newTopology[layer], this->randomiseWeights));
+	UE_LOG(LogTemp, Warning, TEXT("Cleared Topology"));
+	neuralLayers.clear();
+	// Need to load the save game itself before accessing the variables
+	if (UTopologies* LoadedGame = Cast<UTopologies>(UGameplayStatics::LoadGameFromSlot(customSlotName, 0)))
+	{
+		// The operation was successful, so LoadedGame now contains the data we saved earlier.
+
+		test = LoadedGame->Topologies.Num() > 0 ? LoadedGame->Topologies[0].topologyName : "No Topologies in Save";
+		UE_LOG(LogTemp, Warning, TEXT("LOADED: %s"), *test);
+		this->topologies = LoadedGame;
+
+		
+	}
+	
+
+	
+	// Checks if the topology named exists in the save game
+	if (topologies->DoesTopologyExist(customTopologyName)) {
+		// Gets the topology data from the save game given the name of the topology
+		FTopology active = topologies->GetTopologyFromName(customTopologyName);
+
+		UE_LOG(LogTemp, Warning, TEXT("Loading Topology"));
+		this->Topology = active.Topology;
+
+		for (int layer = 0; layer < this->Topology.Num(); layer++) {
+			test = FString::FromInt(layer);
+			UE_LOG(LogTemp, Warning, TEXT("Added Layer: %s"), *test);
+			neuralLayers.push_back(NeuralLayer(this->Topology[layer], this->randomiseWeights, layer));
 		}
-
-		// Otherwise it will just update the existing layer
-		else {
-			neuralLayers.at(layer).UpdateNeurons(newTopology[layer], this->randomiseWeights);
-		}
-
-		// Need to add a check to see if the new topology is smaller
+		
+	}
+	else {
+		UE_LOG(LogTemp, Warning, TEXT("Topology does not exist"));
 	}
 }
 
+void UNeuralNetwork::LoadTopologyDefault()
+{
+	LoadTopology(this->topologyName, this->slotName);
+}
+
+void UNeuralNetwork::SaveCurrentTopologyDefault()
+{
+	SaveCurrentTopology(this->topologyName);
+}
+
+void UNeuralNetwork::SaveCurrentTopology(FString customtopologyName) {
+	FString test;
+
+	// Get reference to save game
+	if (UTopologies* SaveGameInstance = Cast<UTopologies>(UGameplayStatics::CreateSaveGameObject(UTopologies::StaticClass())))
+	{
+		// Set data on the savegame object.
+
+		// Check if name exists in topology
+		if (SaveGameInstance->DoesTopologyExist(customtopologyName)) {
+			UE_LOG(LogTemp, Warning, TEXT("Topology Name exists in save, overwriting"));
+
+			// Overwrite topology if it does
+			SaveGameInstance->Topologies[SaveGameInstance->GetTopologyIndexFromName(customtopologyName)].Topology = this->Topology;
+		}
+		else {
+			UE_LOG(LogTemp, Warning, TEXT("Topology Name is new, adding to save"));
+
+
+			test = FString::FromInt(SaveGameInstance->Topologies.Num());
+			UE_LOG(LogTemp, Warning, TEXT("Number of Topologies in Before Save: %s"), *test);
+
+			// Add current topology to array if it doesn't
+			SaveGameInstance->Topologies.Add(FTopology(customtopologyName, this->Topology));
+
+			test = FString::FromInt(SaveGameInstance->Topologies.Num());
+			UE_LOG(LogTemp, Warning, TEXT("Number of Topologies in Save: %s"), *test);
+		}
+
+		// Save the data immediately.
+		if (UGameplayStatics::SaveGameToSlot(SaveGameInstance, this->slotName, 0))
+		{
+			UE_LOG(LogTemp,Warning,TEXT("Attempt to Save Topology was successful"))
+		}
+
+		test = SaveGameInstance->Topologies.Num() > 0 ? SaveGameInstance->Topologies[0].topologyName : "No Topologies in Save";
+		UE_LOG(LogTemp, Warning, TEXT("SAVED: %s"), *test);
+	}
+
+}
 
 void UNeuralNetwork::FeedForward(TArray<float> input)
 {
@@ -117,7 +185,7 @@ void UNeuralNetwork::FeedForward(TArray<float> input)
 			UE_LOG(LogTemp, Warning, TEXT("Fed through Layer: %s"), *test);
 
 			// Feeds the input through the network
-			neuralLayers.at(layer).FeedForward(this->neuralLayers.at(layer + 1),theta);
+			neuralLayers.at(layer).FeedForward(this->neuralLayers.at(layer + 1), theta, this->Topology[layer]);
 		}
 
 		// Looks for the output layer
@@ -132,6 +200,7 @@ void UNeuralNetwork::FeedForward(TArray<float> input)
 // Will be used for testing and general utility as I want to see the changes in the editor
 void UNeuralNetwork::UpdateUI()
 {
+	// This work so the variable I need to change to update the UI is this variable (this->Topology)
 	this->Topology.Empty();
 	UE_LOG(LogTemp, Warning, TEXT("Topology Emptied"));
 }

@@ -3,12 +3,13 @@
 
 #include "NeuralLayer.h"
 
-NeuralLayer::NeuralLayer(FNeuralLayer &layerInfo, bool randomiseWeights)
+NeuralLayer::NeuralLayer(FNeuralLayer &layerInfo, bool randomiseWeights, int layerNumber)
 {
 	this->layerData = layerInfo;
+	this->layerNum = layerNumber;
 	FString test;
 	for (int neuron = 0; neuron < layerData.NeuronsInLayer.Num(); neuron++) {
-		this->neurons.push_back(Neuron(layerData.NeuronsInLayer[neuron], randomiseWeights));
+		this->neurons.push_back(Neuron(layerData.NeuronsInLayer[neuron], randomiseWeights, neuron));
 		test = FString::FromInt(neuron);
 		UE_LOG(LogTemp, Warning, TEXT("Added Neuron %s to layer"), *test);
 	}
@@ -21,7 +22,7 @@ void NeuralLayer::UpdateNeurons(FNeuralLayer &layerInfo, bool randomiseWeights) 
 	for (int neuron = 0; neuron < layerInfo.NeuronsInLayer.Num(); neuron++) {
 		// Checks if neuron exists yet and adds if it isn't
 		if (neuron > this->layerData.NeuronsInLayer.Num() - 1) {
-			this->neurons.push_back(Neuron(layerInfo.NeuronsInLayer[neuron], randomiseWeights));
+			this->neurons.push_back(Neuron(layerInfo.NeuronsInLayer[neuron], randomiseWeights, neuron));
 		}
 		// Otherwise updates existing neuron
 		else {
@@ -37,7 +38,7 @@ NeuralLayer::~NeuralLayer()
 {
 }
 
-void NeuralLayer::FeedForward(NeuralLayer &nextLayer, float theta) {
+void NeuralLayer::FeedForward(NeuralLayer &nextLayer, float theta, FNeuralLayer &Topology) {
 	FString test;
 
 	// Iterates through all neurons in this layer
@@ -62,18 +63,22 @@ void NeuralLayer::FeedForward(NeuralLayer &nextLayer, float theta) {
 					* this->neurons[neuron].neuronData.Connections[synapse].weight;
 
 			}
-			// Test to see if the algorithm worked as expected until I get the UI working
-			test = FString::SanitizeFloat(nextLayer.neurons[active].neuronData.value);
-			UE_LOG(LogTemp, Warning, TEXT("X = %s"), *test);
-			test = FString::SanitizeFloat(nextLayer.neurons[active].GetActivatedValue(theta));
-			UE_LOG(LogTemp, Warning, TEXT("Y = %s"), *test);
 		}
 
+		test = FString::SanitizeFloat(Topology.NeuronsInLayer[this->neurons[neuron].neuronNum].value);
+		UE_LOG(LogTemp, Warning, TEXT("Topology Value before update: %s"), *test);
+		
+		// This should update the UI to reflect the actual value of the neuron. If this works then I'll do the same for the 
+		// back propagation for the weights.
+		Topology.NeuronsInLayer[neuron].value = this->neurons.at(neuron).neuronData.value;
+
+		test = FString::SanitizeFloat(Topology.NeuronsInLayer[this->neurons[neuron].neuronNum].value);
+		UE_LOG(LogTemp, Warning, TEXT("Topology Value after update: %s"), *test);
 	}
 
 }
 
-void NeuralLayer::BackPropagate(NeuralLayer &prevLayer, float alpha, TArray<float> target) {
+void NeuralLayer::BackPropagate(NeuralLayer &prevLayer, float alpha, TArray<float> target, FNeuralLayer &prevLayerData) {
 	FString test;
 
 	test = FString::SanitizeFloat(alpha);
@@ -138,7 +143,9 @@ void NeuralLayer::BackPropagate(NeuralLayer &prevLayer, float alpha, TArray<floa
 			test = FString::SanitizeFloat(prevLayer.neurons[neuron].neuronData.Connections[synapse].weight);
 			UE_LOG(LogTemp, Warning, TEXT("Neuron's new Weight: %s"), *test);
 		}
-		
+
+		prevLayerData.NeuronsInLayer[neuron] = prevLayer.neurons.at(neuron).neuronData;
+
 	}
 }
 
