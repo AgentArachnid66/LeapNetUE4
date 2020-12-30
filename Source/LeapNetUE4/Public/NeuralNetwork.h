@@ -29,47 +29,98 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	
+#pragma region UFUNCTIONS
+
+
+		/**
+		* Loads a topology. This is a more advanced way to save a topology as you have more options for slots and don't have to change the classes variable
+		* @param topologyName - The name of the Topology to load in
+		* @param slotName - The name of the slot to load in from 
+		 */
 	UFUNCTION(BlueprintCallable)
 		void LoadTopology(FString topologyName, FString slotName);
 
 	UFUNCTION(BlueprintCallable, CallInEditor)
+		/**
+		*Loads a topology from the save game object given the default variables that can be changed in the editor or blueprints. 
+		*/
 		void LoadTopologyDefault();
 
 	UFUNCTION(BlueprintCallable, CallInEditor)
+		/**
+		*Saves the current topology with the default variables. Suitable for basic and advanced uses and easy to use, plus it can be used in the editor for quick use.
+		*/
 		void SaveCurrentTopologyDefault();
 
 	UFUNCTION(BlueprintCallable)
-		void SaveCurrentTopology(FString topologyName);
+		/**
+		* Saves the current topology. This is a more advanced way to save the topology as you have more customisable options
+		* @param topologyName - The name to save the topology as
+		* @param customSlotName - The name of the slot to save the topology into. If it exists already then it will overwrite it, if not then it will be added
+		*/
+		void SaveCurrentTopology(FString topologyName, FString customSlotName);
+
 
 	UFUNCTION(BlueprintCallable)
+		/**
+		* Trains the network
+		* @param inputs - The inputs for the network to feed forward through the network
+		* @param targets - The target values that the network is trying to get to, will be used for back propagation
+		*/
 		void Train(TArray<float> inputs, TArray<float> targets);
 
 	UFUNCTION(BlueprintCallable)
+		/**
+		* Feeds the inputs given through the network
+		* @param input - The input for the network that will be fed forward.
+		*/
 		void FeedForward(TArray<float> input);
 
-	UFUNCTION(CallInEditor)
-		void UpdateUI();
+#pragma endregion
+
+#pragma region UPROPERTY Variables
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		/** Lightweight way to display and save the topology */
 		TArray<FNeuralLayer> Topology;
 		
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		bool randomiseWeights;
+		/** Used for initialisation */
+		bool bRandomiseWeights;
 
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		float theta;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		float alpha;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		/** Name of the Current topology. Change before saving and loading to get the appropriate results */
 		FString topologyName;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		/** Name of the slot to save and load from. Can be changed here instead of in script */
 		FString slotName = "Test";
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		/** Test variable to make sure that the save and loading system was working */
+		bool bPreviouslySaved;
+
+#pragma endregion
+
+#pragma region Variables
+
+	/**
+	* Container for the Neural Layers that is essentially the neural network topology. Using a vector as it should be
+	* kept in C++
+	*/
 	vector<NeuralLayer> neuralLayers;
 
-	// Save game to save topologies
-	UTopologies* topologies;
+	/** Save game to save topologies */
+	class UTopologies* topologies;
+
+#pragma endregion
 };

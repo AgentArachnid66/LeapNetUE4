@@ -2,6 +2,9 @@
 
 
 #include "NeuralNetwork.h"
+#include "LeapNetUE4.h"
+
+
 
 // Sets default values for this component's properties
 UNeuralNetwork::UNeuralNetwork()
@@ -13,6 +16,7 @@ UNeuralNetwork::UNeuralNetwork()
 	// ...
 }
 
+#pragma region Setup
 
 // Called when the game starts
 void UNeuralNetwork::BeginPlay()
@@ -21,23 +25,31 @@ void UNeuralNetwork::BeginPlay()
 	FString test;
 	// ...
 
+	neuralLayers.clear();
 	// Set up the neural network
 	for (int layer = 0; layer < this->Topology.Num(); layer++) {
 		test = FString::FromInt(layer);
 		UE_LOG(LogTemp, Warning, TEXT("Added Layer: %s"), *test);
-		neuralLayers.push_back(NeuralLayer(this->Topology[layer], this->randomiseWeights, layer));
+		neuralLayers.push_back(NeuralLayer(this->Topology[layer], this->bRandomiseWeights, layer));
 	}
 
 
 }
 
+void UNeuralNetwork::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction * ThisTickFunction)
+{
+}
 
+#pragma endregion
+
+#pragma region Test and Train Network
 void UNeuralNetwork::Train(TArray<float> inputs, TArray<float> targets ) {
 	FString test;
 	// Start the Feed Forward
 
 	// Made a separate function for when it comes to use the neural network
 	FeedForward(inputs);
+
 
 	// Start the Back Propagation
 
@@ -65,106 +77,6 @@ void UNeuralNetwork::Train(TArray<float> inputs, TArray<float> targets ) {
 
 	}
 	
-}
-
-
-// Called every frame
-void UNeuralNetwork::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
-}
-
-// Loads the topology from a struct that can be saved to a save game object.
-void UNeuralNetwork::LoadTopology(FString customTopologyName, FString customSlotName) {
-	FString test;
-
-	UE_LOG(LogTemp, Warning, TEXT("Cleared Topology"));
-	neuralLayers.clear();
-	// Need to load the save game itself before accessing the variables
-	if (UTopologies* LoadedGame = Cast<UTopologies>(UGameplayStatics::LoadGameFromSlot(customSlotName, 0)))
-	{
-		// The operation was successful, so LoadedGame now contains the data we saved earlier.
-
-		test = LoadedGame->Topologies.Num() > 0 ? LoadedGame->Topologies[0].topologyName : "No Topologies in Save";
-		UE_LOG(LogTemp, Warning, TEXT("LOADED: %s"), *test);
-		this->topologies = LoadedGame;
-
-		
-	}
-	
-
-	
-	// Checks if the topology named exists in the save game
-	if (topologies->DoesTopologyExist(customTopologyName)) {
-		// Gets the topology data from the save game given the name of the topology
-		FTopology active = topologies->GetTopologyFromName(customTopologyName);
-
-		UE_LOG(LogTemp, Warning, TEXT("Loading Topology"));
-		this->Topology = active.Topology;
-
-		for (int layer = 0; layer < this->Topology.Num(); layer++) {
-			test = FString::FromInt(layer);
-			UE_LOG(LogTemp, Warning, TEXT("Added Layer: %s"), *test);
-			neuralLayers.push_back(NeuralLayer(this->Topology[layer], this->randomiseWeights, layer));
-		}
-		
-	}
-	else {
-		UE_LOG(LogTemp, Warning, TEXT("Topology does not exist"));
-	}
-}
-
-void UNeuralNetwork::LoadTopologyDefault()
-{
-	LoadTopology(this->topologyName, this->slotName);
-}
-
-void UNeuralNetwork::SaveCurrentTopologyDefault()
-{
-	SaveCurrentTopology(this->topologyName);
-}
-
-void UNeuralNetwork::SaveCurrentTopology(FString customtopologyName) {
-	FString test;
-
-	// Get reference to save game
-	if (UTopologies* SaveGameInstance = Cast<UTopologies>(UGameplayStatics::CreateSaveGameObject(UTopologies::StaticClass())))
-	{
-		// Set data on the savegame object.
-
-		// Check if name exists in topology
-		if (SaveGameInstance->DoesTopologyExist(customtopologyName)) {
-			UE_LOG(LogTemp, Warning, TEXT("Topology Name exists in save, overwriting"));
-
-			// Overwrite topology if it does
-			SaveGameInstance->Topologies[SaveGameInstance->GetTopologyIndexFromName(customtopologyName)].Topology = this->Topology;
-		}
-		else {
-			UE_LOG(LogTemp, Warning, TEXT("Topology Name is new, adding to save"));
-
-
-			test = FString::FromInt(SaveGameInstance->Topologies.Num());
-			UE_LOG(LogTemp, Warning, TEXT("Number of Topologies in Before Save: %s"), *test);
-
-			// Add current topology to array if it doesn't
-			SaveGameInstance->Topologies.Add(FTopology(customtopologyName, this->Topology));
-
-			test = FString::FromInt(SaveGameInstance->Topologies.Num());
-			UE_LOG(LogTemp, Warning, TEXT("Number of Topologies in Save: %s"), *test);
-		}
-
-		// Save the data immediately.
-		if (UGameplayStatics::SaveGameToSlot(SaveGameInstance, this->slotName, 0))
-		{
-			UE_LOG(LogTemp,Warning,TEXT("Attempt to Save Topology was successful"))
-		}
-
-		test = SaveGameInstance->Topologies.Num() > 0 ? SaveGameInstance->Topologies[0].topologyName : "No Topologies in Save";
-		UE_LOG(LogTemp, Warning, TEXT("SAVED: %s"), *test);
-	}
-
 }
 
 void UNeuralNetwork::FeedForward(TArray<float> input)
@@ -197,10 +109,113 @@ void UNeuralNetwork::FeedForward(TArray<float> input)
 	}
 }
 
-// Will be used for testing and general utility as I want to see the changes in the editor
-void UNeuralNetwork::UpdateUI()
-{
-	// This work so the variable I need to change to update the UI is this variable (this->Topology)
-	this->Topology.Empty();
-	UE_LOG(LogTemp, Warning, TEXT("Topology Emptied"));
+#pragma endregion
+
+#pragma region Saving and Loading
+
+// Loads the topology from a struct that can be saved to a save game object.
+void UNeuralNetwork::LoadTopology(FString customTopologyName, FString customSlotName) {
+	FString test;
+	if (UGameplayStatics::DoesSaveGameExist(customSlotName, 0)) {
+
+		
+		this->topologies = Cast<UTopologies>(UGameplayStatics::LoadGameFromSlot(customSlotName, 0));
+
+		// Test to make sure that the save is working
+		test = this->topologies->bPrevSaved ? "True" : "False";
+		UE_LOG(LogTemp, Warning, TEXT("Has been saved previously? %s"), *test);
+		this->bPreviouslySaved = this->topologies->bPrevSaved;
+		
+
+		if (this->topologies->DoesTopologyExist(customTopologyName)) {
+			// Retrieves the topology from the save game object
+			this->Topology = this->topologies->GetTopologyFromName(customTopologyName).Topology;
+
+			// Retrieves the theta and alpha values for the network
+			this->theta = this->topologies->GetTopologyFromName(customTopologyName).theta;
+			this->alpha = this->topologies->GetTopologyFromName(customTopologyName).alpha;
+
+			// Clears the neural network ready for repopulation
+			UE_LOG(LogTemp, Warning, TEXT("Cleared Topology"));
+			neuralLayers.clear();
+
+			// Set up the neural network
+			UE_LOG(LogTemp, Warning, TEXT("Setting up loaded Topology"));
+			for (int layer = 0; layer < this->Topology.Num(); layer++) {
+				test = FString::FromInt(layer);
+				UE_LOG(LogTemp, Warning, TEXT("Added Layer: %s"), *test);
+				neuralLayers.push_back(NeuralLayer(this->Topology[layer], this->bRandomiseWeights, layer));
+			}
+		}
+
+		else {
+			UE_LOG(LogTemp, Warning, TEXT("Topology Name doesn't exist and couldn't be loaded"));
+		}
+
+	}
+	else {
+		UE_LOG(LogTemp, Warning,TEXT("No save game found in slot"));
+	}
 }
+
+void UNeuralNetwork::SaveCurrentTopology(FString customTopologyName, FString customSlotName) {
+	FString test;
+	if (this->topologies == nullptr) {
+		UE_LOG(LogTemp, Warning, TEXT("Topology variable is null pointer"));
+
+		if (UGameplayStatics::DoesSaveGameExist(customSlotName, 0)) {
+
+			UE_LOG(LogTemp, Warning, TEXT("SaveGame Exists, Loading for saving operation"));
+			this->topologies = Cast<UTopologies>(UGameplayStatics::LoadGameFromSlot(customSlotName, 0));
+		}
+		else {
+
+			UE_LOG(LogTemp, Warning, TEXT("Save Game doesn't exist, creating new one"));
+			this->topologies = Cast<UTopologies>(UGameplayStatics::CreateSaveGameObject(UTopologies::StaticClass()));
+		}
+	}
+	if (this->topologies->IsValidLowLevel()) {
+
+		this->topologies->bPrevSaved = true;
+
+		UE_LOG(LogTemp, Warning, TEXT("Topology %s added"), *customTopologyName);
+
+		if (this->topologies->DoesTopologyExist(customTopologyName)) {
+			// If the topology name already exists in the save file, overwrite it
+			this->topologies->Topologies[this->topologies->GetTopologyIndexFromName(customTopologyName)].Topology = this->Topology;
+			UE_LOG(LogTemp, Warning, TEXT("Topology name already exists, overwriting save file"));
+
+			// Saves the theta and alpha values of the network for it to work properly
+			this->topologies->Topologies[this->topologies->GetTopologyIndexFromName(customTopologyName)].alpha = this->alpha;
+			this->topologies->Topologies[this->topologies->GetTopologyIndexFromName(customTopologyName)].theta = this->theta;
+		}
+		else {
+			// If it is a new topology name, then add it as a new item
+			this->topologies->Topologies.Add(FTopology(customTopologyName, this->Topology, this->theta, this->alpha));
+			UE_LOG(LogTemp, Warning, TEXT("Topology name is new, adding to save file"));
+		}
+
+
+
+		// Saves the game to the slot
+		UGameplayStatics::SaveGameToSlot(this->topologies, customSlotName, 0);
+		UE_LOG(LogTemp, Warning, TEXT("Game saved"));
+	}
+	else {
+		UE_LOG(LogTemp, Warning, TEXT("Invalid Save Game Object"));
+	}
+
+}
+
+void UNeuralNetwork::LoadTopologyDefault()
+{
+	LoadTopology(this->topologyName, this->slotName);
+}
+
+void UNeuralNetwork::SaveCurrentTopologyDefault()
+{
+	SaveCurrentTopology(this->topologyName, this->slotName);
+}
+
+#pragma endregion
+

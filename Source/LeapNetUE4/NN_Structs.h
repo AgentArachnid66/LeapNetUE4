@@ -47,14 +47,31 @@ struct FTopology {
 	{
 	}
 
-	FTopology(FString n, TArray<FNeuralLayer> t) // Overloaded Constructor
+	/**
+	* Constructor of the FTopology struct. Useful for saving Topology data
+	* @param n - The name of the Topology
+	* @param t - The Topology data
+	* @param th - Theta value (Threshold Value)
+	* @param a - Alpha value (learning rate)
+	* @return FTopology
+	*/
+	FTopology(FString n, TArray<FNeuralLayer> t, float th, float a) // Overloaded Constructor
 	{
 		topologyName = n;
 		Topology = t;
+		theta = th;
+		alpha = a;
 	}
 
+	UPROPERTY()
+		FString topologyName;
 
-	FString topologyName;
+	UPROPERTY()
+		TArray<FNeuralLayer> Topology;
 
-	TArray<FNeuralLayer> Topology;
+	UPROPERTY()
+		float theta;
+
+	UPROPERTY()
+		float alpha;
 };

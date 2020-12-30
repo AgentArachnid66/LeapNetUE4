@@ -40,7 +40,7 @@ NeuralLayer::~NeuralLayer()
 
 void NeuralLayer::FeedForward(NeuralLayer &nextLayer, float theta, FNeuralLayer &Topology) {
 	FString test;
-
+	
 	// Iterates through all neurons in this layer
 	for (int neuron = 0; neuron < this->neurons.size(); neuron++) {
 		test = FString::FromInt(neuron);
@@ -108,7 +108,6 @@ void NeuralLayer::BackPropagate(NeuralLayer &prevLayer, float alpha, TArray<floa
 		
 		test = FString::SanitizeFloat(prevLayer.neurons.at(neuron).neuronData.error);
 		UE_LOG(LogTemp, Warning, TEXT("Neuron has error: %s"), *test);
-
 
 		test = FString::FromInt(prevLayer.neurons.at(neuron).neuronData.Connections.Num());
 		UE_LOG(LogTemp, Warning, TEXT("Neuron has %s connections"), *test);
