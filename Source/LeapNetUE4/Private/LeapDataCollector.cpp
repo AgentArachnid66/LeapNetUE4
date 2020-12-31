@@ -47,13 +47,19 @@ TArray<float> ULeapDataCollector::CalculateData(FLeapFrameData frameData)
 	test = frameData.NumberOfHandsVisible > 0 ? "At least one hand is visible" : "No hands in frame data";
 	UE_LOG(LogTemp, Warning, TEXT("%s"), *test);
 
+
+
 	for (FLeapHandData &hand : frameData.Hands)
 	{
 
 	// Need to check if the hand is visible and has data before we try calculating data for it.
-	// NOTE - Change to getting empty data if hand isn't visible (all 0s) as this may affect the neural network
+
+	// NOTE - Change to getting empty data if hand isn't visible (all 0s) as this may affect the neural network. The
+	// length of the array that will be used will be determined after all other substantial changes and milestones have
+	// been reached
 		test = hand.HandType == EHandType::LEAP_HAND_LEFT ? "Left Hand" : "Right Hand";
 		UE_LOG(LogTemp, Warning, TEXT("%s being collected"), *test);
+
 		returnValue.Append(CalculateHandData(hand));
 	}
 
@@ -65,16 +71,13 @@ TArray<float> ULeapDataCollector::CalculateBoneData(FLeapBoneData boneData)
 {
 	TArray<float> returnValue;
 
-	UE_LOG(LogTemp, Warning, TEXT("Next Joint on this bone"))
-	returnValue.Add(boneData.NextJoint.ForwardVector.X);
-	returnValue.Add(boneData.NextJoint.ForwardVector.Y);
-	returnValue.Add(boneData.NextJoint.ForwardVector.Z);
+	FVector forward = UKismetMathLibrary::GetForwardVector(boneData.Rotation);
+	UE_LOG(LogTemp, Warning, TEXT("Bone's Forward Vector: %s"), *forward.ToString());
 
-	UE_LOG(LogTemp, Warning, TEXT("Previous Joint on this bone"));
-	returnValue.Add(boneData.PrevJoint.ForwardVector.X);
-	returnValue.Add(boneData.PrevJoint.ForwardVector.Y);
-	returnValue.Add(boneData.PrevJoint.ForwardVector.Z);
-	
+
+	returnValue.Add(forward.X);
+	returnValue.Add(forward.Y); 
+	returnValue.Add(forward.Z);
 
 	return returnValue;
 }

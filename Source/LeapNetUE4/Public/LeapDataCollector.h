@@ -6,6 +6,8 @@
 #include "Components/ActorComponent.h"
 #include "Leap/include/LeapC.h"
 #include "LeapMotion/Public/LeapMotionData.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Math/Vector.h"
 #include "LeapDataCollector.generated.h"
 
 
