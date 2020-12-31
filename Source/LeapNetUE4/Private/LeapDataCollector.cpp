@@ -112,16 +112,17 @@ TArray<float> ULeapDataCollector::CalculateHandData(FLeapHandData handData)
 TArray<float> ULeapDataCollector::CalculatePalmData(FLeapPalmData palmData)
 {
 	TArray<float> returnValue;
-	returnValue.Add(palmData.Orientation.Yaw);
-	returnValue.Add(palmData.Orientation.Pitch);
-	returnValue.Add(palmData.Orientation.Roll);
-	returnValue.Add(palmData.Direction.ForwardVector.X);
-	returnValue.Add(palmData.Direction.ForwardVector.Y);
-	returnValue.Add(palmData.Direction.ForwardVector.Z);
+
+	FVector palmForward = UKismetMathLibrary::GetForwardVector(palmData.Orientation);
+
+	returnValue.Add(palmForward.X);
+	returnValue.Add(palmForward.Y);
+	returnValue.Add(palmForward.Z);
 	returnValue.Add(palmData.Velocity.Size());
 	returnValue.Add(palmData.StabilizedPosition.X);
 	returnValue.Add(palmData.StabilizedPosition.Y);
 	returnValue.Add(palmData.StabilizedPosition.Z);
+
 
 	return returnValue;
 }
