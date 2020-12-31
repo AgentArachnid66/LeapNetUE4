@@ -24,6 +24,20 @@ void UNeuralNetwork::BeginPlay()
 	Super::BeginPlay();
 	FString test;
 	// ...
+	if (this->topologies == nullptr) {
+		UE_LOG(LogTemp, Warning, TEXT("Save Game variable is null pointer"));
+
+		if (UGameplayStatics::DoesSaveGameExist(this->slotName, 0)) {
+
+			UE_LOG(LogTemp, Warning, TEXT("SaveGame Exists, Loading for saving operation"));
+			this->topologies = Cast<UTopologies>(UGameplayStatics::LoadGameFromSlot(this->slotName, 0));
+		}
+		else {
+
+			UE_LOG(LogTemp, Warning, TEXT("Save Game doesn't exist, creating new one"));
+			this->topologies = Cast<UTopologies>(UGameplayStatics::CreateSaveGameObject(UTopologies::StaticClass()));
+		}
+	}
 
 	neuralLayers.clear();
 	// Set up the neural network
