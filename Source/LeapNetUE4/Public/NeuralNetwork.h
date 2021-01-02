@@ -76,6 +76,8 @@ public:
 		*/
 		void FeedForward(TArray<float> input);
 
+	
+
 #pragma endregion
 
 #pragma region UPROPERTY Variables

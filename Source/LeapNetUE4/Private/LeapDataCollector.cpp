@@ -19,8 +19,25 @@ void ULeapDataCollector::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// ...
+	if (this->LeapData == nullptr) {
+		UE_LOG(LogTemp, Warning, TEXT("Save Game variable is null pointer"));
+
+		if (UGameplayStatics::DoesSaveGameExist(this->slotName, 0)) {
+
+			UE_LOG(LogTemp, Warning, TEXT("SaveGame Exists, Loading for saving operation"));
+			this->LeapData = Cast<ULeapNeuralData>(UGameplayStatics::LoadGameFromSlot(this->slotName, 0));
+		}
+		else {
+
+			UE_LOG(LogTemp, Warning, TEXT("Save Game doesn't exist, creating new one"));
+			this->LeapData = Cast<ULeapNeuralData>(UGameplayStatics::CreateSaveGameObject(ULeapNeuralData::StaticClass()));
+		}
+	}
 	
+	// Makes a timer for the recording functionality and then pauses it
+	GetWorld()->GetTimerManager().SetTimer(recorderHandle, this, &ULeapDataCollector::Snapshot, 1.f/this->recordRate, true);
+	GetWorld()->GetTimerManager().PauseTimer(recorderHandle);
+
 }
 
 
@@ -32,11 +49,159 @@ void ULeapDataCollector::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	// ...
 }
 
+#pragma region Data Collection
+
 void ULeapDataCollector::Snapshot() {
 
-	UE_LOG(LogTemp, Warning, TEXT("Leap Frame Data was recieved"));
+	
+	// Adds the data
+	trainingData.Add(FFrameData(CalculateData(data), gestureName));
+	
+	// Recording functionality
+
+	// Checks if the timer is unpaused and exists
+	if (GetWorld()->GetTimerManager().IsTimerActive(recorderHandle)) {
+
+		// Increments so that if this data is deleted, it will delete all the relevant data
+		recordingIterations++;
+
+		// Debugging 
+		test = FString::FromInt(recordingIterations);
+		UE_LOG(LogTemp, Warning, TEXT("Number of recording Iterations: %s"), *test);
+	}
 
 }
+
+void ULeapDataCollector::RemoveLastSnapshot()
+{
+	trainingData.RemoveAt(trainingData.Num() - 1);
+}
+
+void ULeapDataCollector::RemoveLastNSnapshots(int last)
+{
+	for (int i = trainingData.Num() - last; i < trainingData.Num(); i++) {
+		trainingData.RemoveAt(i);
+	}
+}
+
+void ULeapDataCollector::StartRecording()
+{
+	// Unpauses the recording timer
+	GetWorld()->GetTimerManager().UnPauseTimer(recorderHandle);
+}
+
+void ULeapDataCollector::StopRecording()
+{
+	// Pauses the timer. 
+	GetWorld()->GetTimerManager().PauseTimer(recorderHandle);
+}
+
+void ULeapDataCollector::SaveRecording()
+{
+	SaveLeapData(this->slotName, this->overwriteData);
+}
+
+void ULeapDataCollector::DeleteRecording()
+{
+	// Only deletes the most recent recording from the training data.
+	RemoveLastNSnapshots(this->recordingIterations);
+	recordingIterations = 0;
+}
+
+void ULeapDataCollector::GestureIndicesFromTags()
+{
+	TMap<FString, int> gestureMap;
+	int highest = 0;
+	for (int i = 0; i < trainingData.Num(); i++) {
+		// If the gesture is unique then it will be set to the highest value so far, 
+		// else it will be set to the correct index
+		trainingData[i].gestureIndex = gestureMap.FindOrAdd(trainingData[i].gestureTag, highest);
+
+		// If it is equal to the highest value so far, I need to increment the highest value so that the next unique
+		// gesture gets the correct index assigned to it
+		if (trainingData[i].gestureIndex == highest) {
+			highest++;
+		}
+
+	}
+}
+
+#pragma endregion
+
+#pragma region Saving and Loading
+
+void ULeapDataCollector::SaveLeapData(FString customSlotName, bool overwriteTrainingData) {
+
+	if (this->LeapData == nullptr) {
+		UE_LOG(LogTemp, Warning, TEXT("LeapData variable is null pointer"));
+
+		if (UGameplayStatics::DoesSaveGameExist(customSlotName, 0)) {
+
+			UE_LOG(LogTemp, Warning, TEXT("SaveGame Exists, Loading for saving operation"));
+			this->LeapData = Cast<ULeapNeuralData>(UGameplayStatics::LoadGameFromSlot(customSlotName, 0));
+		}
+		else {
+
+			UE_LOG(LogTemp, Warning, TEXT("Save Game doesn't exist, creating new one"));
+			this->LeapData = Cast<ULeapNeuralData>(UGameplayStatics::CreateSaveGameObject(ULeapNeuralData::StaticClass()));
+		}
+	}
+	if (this->LeapData->IsValidLowLevel()) {
+
+		// Overwrites the frame data on the save
+		if (overwriteTrainingData) {
+			this->LeapData->frameData = this->trainingData;
+			test = FString::FromInt(this->LeapData->ConvertTagsToInts());
+			UE_LOG(LogTemp, Warning, TEXT("Number of Unique Gestures in Save: %s"), *test);
+		}
+
+		// Adds the data to the save
+		else {
+			this->LeapData->frameData.Append(this->trainingData);
+			test = FString::FromInt(this->LeapData->ConvertTagsToInts());
+			UE_LOG(LogTemp, Warning, TEXT("Number of Unique Gestures in Save: %s"), *test);
+		}
+
+
+
+		// Saves the game to the slot
+		UGameplayStatics::SaveGameToSlot(this->LeapData, customSlotName, 0);
+		UE_LOG(LogTemp, Warning, TEXT("Game saved"));
+	}
+	else {
+		UE_LOG(LogTemp, Warning, TEXT("Invalid Save Game Object"));
+
+		if (UGameplayStatics::DoesSaveGameExist(customSlotName, 0)) {
+
+			UE_LOG(LogTemp, Warning, TEXT("SaveGame Exists, Loading for saving operation"));
+			this->LeapData = Cast<ULeapNeuralData>(UGameplayStatics::LoadGameFromSlot(customSlotName, 0));
+		}
+		else {
+
+			UE_LOG(LogTemp, Warning, TEXT("Save Game doesn't exist, creating new one"));
+			this->LeapData = Cast<ULeapNeuralData>(UGameplayStatics::CreateSaveGameObject(ULeapNeuralData::StaticClass()));
+		}
+
+	}
+
+}
+
+void ULeapDataCollector::LoadLeapData(FString customSlotName) {
+	
+	
+	if (UGameplayStatics::DoesSaveGameExist(customSlotName, 0)) {
+
+		this->LeapData = Cast<ULeapNeuralData>(UGameplayStatics::LoadGameFromSlot(customSlotName, 0));
+
+		// Retrieves the topology from the save game object
+		this->trainingData = this->LeapData->frameData;
+	}
+	else {
+		UE_LOG(LogTemp, Warning, TEXT("No save game found in slot"));
+	}
+}
+
+#pragma endregion
 
 #pragma region CalculateData
 
@@ -44,23 +209,37 @@ TArray<float> ULeapDataCollector::CalculateData(FLeapFrameData frameData)
 {
 	TArray<float> returnValue;
 
+	TArray<float> replacement;
+
+	replacement.Init(0, 64);
+
 	test = frameData.NumberOfHandsVisible > 0 ? "At least one hand is visible" : "No hands in frame data";
 	UE_LOG(LogTemp, Warning, TEXT("%s"), *test);
 
-
+	if (!frameData.LeftHandVisible) {
+		UE_LOG(LogTemp, Warning, TEXT("Left Hand is not visible in Frame Data"));
+		returnValue = replacement;
+	}
 
 	for (FLeapHandData &hand : frameData.Hands)
 	{
 
 	// Need to check if the hand is visible and has data before we try calculating data for it.
 
-	// NOTE - Change to getting empty data if hand isn't visible (all 0s) as this may affect the neural network. The
-	// length of the array that will be used will be determined after all other substantial changes and milestones have
-	// been reached
 		test = hand.HandType == EHandType::LEAP_HAND_LEFT ? "Left Hand" : "Right Hand";
 		UE_LOG(LogTemp, Warning, TEXT("%s being collected"), *test);
 
-		returnValue.Append(CalculateHandData(hand));
+		TArray<float> data = CalculateHandData(hand);
+
+		test = FString::FromInt(data.Num());
+		UE_LOG(LogTemp, Warning, TEXT("Number of elements in dataset: %s"), *test);
+
+		returnValue.Append(data);
+	}
+
+	if (!frameData.RightHandVisible) {
+		UE_LOG(LogTemp, Warning, TEXT("Right Hand is not visible in Frame Data"));
+		returnValue.Append(replacement);
 	}
 
 	
@@ -87,8 +266,6 @@ TArray<float> ULeapDataCollector::CalculateDigitData(FLeapDigitData digitData)
 	
 	TArray<float> returnValue;
 	for (int bone = 0; bone < digitData.Bones.Num(); bone++) {
-		test = FString::FromInt(digitData.FingerId);
-		UE_LOG(LogTemp, Warning, TEXT("Finger ID: %s"), *test);
 
 		returnValue.Append(CalculateBoneData(digitData.Bones[bone]));
 	}
@@ -119,10 +296,6 @@ TArray<float> ULeapDataCollector::CalculatePalmData(FLeapPalmData palmData)
 	returnValue.Add(palmForward.Y);
 	returnValue.Add(palmForward.Z);
 	returnValue.Add(palmData.Velocity.Size());
-	returnValue.Add(palmData.StabilizedPosition.X);
-	returnValue.Add(palmData.StabilizedPosition.Y);
-	returnValue.Add(palmData.StabilizedPosition.Z);
-
 
 	return returnValue;
 }
