@@ -132,20 +132,18 @@ void ULeapDataCollector::GestureIndicesFromTags()
 
 void ULeapDataCollector::SaveLeapData(FString customSlotName, bool overwriteTrainingData) {
 
-	if (this->LeapData == nullptr) {
-		UE_LOG(LogTemp, Warning, TEXT("LeapData variable is null pointer"));
 
-		if (UGameplayStatics::DoesSaveGameExist(customSlotName, 0)) {
+	if (UGameplayStatics::DoesSaveGameExist(customSlotName, 0)) {
 
-			UE_LOG(LogTemp, Warning, TEXT("SaveGame Exists, Loading for saving operation"));
-			this->LeapData = Cast<ULeapNeuralData>(UGameplayStatics::LoadGameFromSlot(customSlotName, 0));
-		}
-		else {
-
-			UE_LOG(LogTemp, Warning, TEXT("Save Game doesn't exist, creating new one"));
-			this->LeapData = Cast<ULeapNeuralData>(UGameplayStatics::CreateSaveGameObject(ULeapNeuralData::StaticClass()));
-		}
+		UE_LOG(LogTemp, Warning, TEXT("SaveGame Exists, Loading for saving operation"));
+		this->LeapData = Cast<ULeapNeuralData>(UGameplayStatics::LoadGameFromSlot(customSlotName, 0));
 	}
+	else {
+
+		UE_LOG(LogTemp, Warning, TEXT("Save Game doesn't exist, creating new one"));
+		this->LeapData = Cast<ULeapNeuralData>(UGameplayStatics::CreateSaveGameObject(ULeapNeuralData::StaticClass()));
+	}
+	
 	if (this->LeapData->IsValidLowLevel()) {
 
 		// Overwrites the frame data on the save
@@ -201,6 +199,18 @@ void ULeapDataCollector::LoadLeapData(FString customSlotName) {
 	}
 }
 
+void ULeapDataCollector::SaveToText(FString fileName, FString content, FString fileExt) {
+
+	FString dir = FPaths::ProjectDir() + fileName + fileExt;
+	if (FFileHelper::SaveStringToFile(content, *dir)) {
+		UE_LOG(LogTemp, Warning, TEXT("File saved to %s successfully"), *dir);
+	}
+	else {
+		UE_LOG(LogTemp, Warning, TEXT("File Failed to save to %s"), *dir);
+	}
+
+}
+
 #pragma endregion
 
 #pragma region CalculateData
@@ -229,12 +239,12 @@ TArray<float> ULeapDataCollector::CalculateData(FLeapFrameData frameData)
 		test = hand.HandType == EHandType::LEAP_HAND_LEFT ? "Left Hand" : "Right Hand";
 		UE_LOG(LogTemp, Warning, TEXT("%s being collected"), *test);
 
-		TArray<float> data = CalculateHandData(hand);
+		TArray<float> calData = CalculateHandData(hand);
 
-		test = FString::FromInt(data.Num());
+		test = FString::FromInt(calData.Num());
 		UE_LOG(LogTemp, Warning, TEXT("Number of elements in dataset: %s"), *test);
 
-		returnValue.Append(data);
+		returnValue.Append(calData);
 	}
 
 	if (!frameData.RightHandVisible) {

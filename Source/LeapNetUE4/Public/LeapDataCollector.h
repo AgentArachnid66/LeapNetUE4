@@ -13,6 +13,9 @@
 #include "LeapData_Structs.h"
 #include "TimerManager.h"
 #include "Engine/World.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
+//
 #include "LeapDataCollector.generated.h"
 
 
@@ -143,6 +146,14 @@ public:
 		*/
 		void LoadData() { LoadLeapData(this->slotName); }
 
+	UFUNCTION(BlueprintCallable)
+		/**
+		* Saves to a text file. Automatically adds txt file extension
+		* @param fileName - Name of the file to save as
+		* @param content - The content of the file to save
+		* @param fileExt - File extension in case default isn't sufficient
+		*/
+		void SaveToText(FString fileName, FString content, FString fileExt);
 
 #pragma endregion
 
