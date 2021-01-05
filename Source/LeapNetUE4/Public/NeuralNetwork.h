@@ -97,6 +97,9 @@ public:
 
 #pragma region UPROPERTY Variables
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		/** Easy way to set up the topology */
+		TArray<int> baseTopology;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		/** Lightweight way to display and save the topology */
@@ -107,11 +110,14 @@ public:
 		bool bRandomiseWeights;
 
 	
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		// Threshold value for activation function
 		float theta;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		// Learning rate of the network
 		float alpha;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

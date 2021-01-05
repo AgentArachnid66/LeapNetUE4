@@ -40,14 +40,41 @@ void UNeuralNetwork::BeginPlay()
 	}
 
 	neuralLayers.clear();
+
 	// Set up the neural network
+
+	// If the user wants to make a basic topology, then this is where it happens
+	// It needs to convert the TArray of ints to a TArray of FNeuralLayer structs 
+	if (this->baseTopology.Num() > 0) {
+		this->Topology.Empty();
+		// Iterates through all the layers
+		for (int layer = 0; layer < this->baseTopology.Num(); layer++) {
+			TArray<FNeuron> neuronsInLayer;
+			// Iterates through all the neurons in the layer
+			for (int neuron = 0; neuron < this->baseTopology[layer]; neuron++) {
+				TArray<FSynapse> connections;
+				// Iterates through all the ouput neurons to get the connections
+				if (layer < this->baseTopology.Num() - 2) {
+
+					for (int output = 0; output < this->baseTopology[layer + 1]; output++) {
+						connections.Add(FSynapse(0, output));
+					}
+				}
+				neuronsInLayer.Add(FNeuron(connections, 0, 0));
+			}
+
+			this->Topology.Add(FNeuralLayer(neuronsInLayer));
+		}
+
+
+	}
+
+	// Either uses the newly generated data or the user defined topology to set up the topology
 	for (int layer = 0; layer < this->Topology.Num(); layer++) {
 		test = FString::FromInt(layer);
 		UE_LOG(LogTemp, Warning, TEXT("Added Layer: %s"), *test);
 		neuralLayers.push_back(NeuralLayer(this->Topology[layer], this->bRandomiseWeights, layer));
 	}
-
-
 }
 
 void UNeuralNetwork::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction * ThisTickFunction)

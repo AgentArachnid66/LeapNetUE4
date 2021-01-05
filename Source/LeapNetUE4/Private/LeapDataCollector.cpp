@@ -214,19 +214,23 @@ void ULeapDataCollector::SaveToText(FString fileName, FString content, FString f
 
 void ULeapDataCollector::SendDataToNetwork(UNeuralNetwork* neuralNetwork, NetworkUse netUsage)
 {
+	if (trainingData.Num() >= 1) {
+		// Switches the use of the function based on what is needed from it
+		switch (netUsage) {
 
-	// Switches the use of the function based on what is needed from it
-	switch (netUsage) {
+		case NetworkUse::Train:
+			// Network is being trained by this data
+			neuralNetwork->TrainIndex(trainingData.Last().data, trainingData.Last().gestureIndex);
+			break;
 
-	case NetworkUse::Train:
-		// Network is being trained by this data
-		neuralNetwork->TrainIndex(trainingData.Last().data, trainingData.Last().gestureIndex);
-		break;
-
-	case NetworkUse::Runtime:
-		// Network is being tested by this data or being used at runtime
-		neuralNetwork->FeedForward(trainingData.Last().data);
-		break;
+		case NetworkUse::Runtime:
+			// Network is being tested by this data or being used at runtime
+			neuralNetwork->FeedForward(trainingData.Last().data);
+			break;
+		}
+	}
+	else {
+		UE_LOG(LogTemp, Warning, TEXT("Non-Existent Data"));
 	}
 }
 
