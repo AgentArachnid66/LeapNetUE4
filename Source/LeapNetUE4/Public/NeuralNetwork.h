@@ -6,6 +6,7 @@
 #include "NN_Structs.h"
 #include "NeuralLayer.h"
 #include "Topologies.h"
+#include "LeapNeuralData.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/ActorComponent.h"
 #include "NeuralNetwork.generated.h"
@@ -60,6 +61,12 @@ public:
 		*/
 		void SaveCurrentTopology(FString topologyName, FString customSlotName);
 
+	UFUNCTION(BlueprintCallable)
+		/**
+		* Loads in the leap data from a save game object. Used for training and testing, instead of run time use
+		* @param customSlotName - The name of the slot to load the data from
+		*/
+		void LoadLeapData(FString customSlotName);
 
 	UFUNCTION(BlueprintCallable)
 		/**
@@ -68,6 +75,14 @@ public:
 		* @param targets - The target values that the network is trying to get to, will be used for back propagation
 		*/
 		void Train(TArray<float> inputs, TArray<float> targets);
+
+	UFUNCTION(BlueprintCallable)
+		/**
+		* Trains the network
+		* @param inputs - The inputs to the network
+		* @param targetIndex - The index of the neuron on the output layer
+		*/
+		void TrainIndex(TArray<float> inputs, int targetIndex);
 
 	UFUNCTION(BlueprintCallable)
 		/**
@@ -111,6 +126,7 @@ public:
 		/** Test variable to make sure that the save and loading system was working */
 		bool bPreviouslySaved;
 
+
 #pragma endregion
 
 #pragma region Variables
@@ -123,6 +139,8 @@ public:
 
 	/** Save game to save topologies */
 	class UTopologies* topologies;
+
+	TArray<FFrameData> trainingData;
 
 #pragma endregion
 };

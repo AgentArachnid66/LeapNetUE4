@@ -15,6 +15,7 @@
 #include "Engine/World.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
+#include "NeuralNetwork.h"
 //
 #include "LeapDataCollector.generated.h"
 
@@ -154,6 +155,14 @@ public:
 		* @param fileExt - File extension in case default isn't sufficient
 		*/
 		void SaveToText(FString fileName, FString content, FString fileExt);
+
+	UFUNCTION(BlueprintCallable)
+		/**
+		* This function is to be used at runtime to send the most recent frame data to the neural network.
+		* @param neuralNetwork - Reference to the neural network to send the data to
+		* @param netUsage - If it is being used to test or train the network
+		*/
+		void SendDataToNetwork(UNeuralNetwork* neuralNetwork, NetworkUse netUsage);
 
 #pragma endregion
 

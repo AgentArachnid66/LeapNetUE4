@@ -2,6 +2,7 @@
 
 
 #include "LeapDataCollector.h"
+#include "..\Public\LeapDataCollector.h"
 
 // Sets default values for this component's properties
 ULeapDataCollector::ULeapDataCollector()
@@ -209,6 +210,24 @@ void ULeapDataCollector::SaveToText(FString fileName, FString content, FString f
 		UE_LOG(LogTemp, Warning, TEXT("File Failed to save to %s"), *dir);
 	}
 
+}
+
+void ULeapDataCollector::SendDataToNetwork(UNeuralNetwork* neuralNetwork, NetworkUse netUsage)
+{
+
+	// Switches the use of the function based on what is needed from it
+	switch (netUsage) {
+
+	case NetworkUse::Train:
+		// Network is being trained by this data
+		neuralNetwork->TrainIndex(trainingData.Last().data, trainingData.Last().gestureIndex);
+		break;
+
+	case NetworkUse::Runtime:
+		// Network is being tested by this data or being used at runtime
+		neuralNetwork->FeedForward(trainingData.Last().data);
+		break;
+	}
 }
 
 #pragma endregion

@@ -25,3 +25,9 @@ struct FFrameData {
 		int gestureIndex;
 
 };
+
+UENUM(BlueprintType)
+enum NetworkUse {
+	Train UMETA(DisplayName = "Train"),
+	Runtime UMETA(DisplayName = "Runtime"),
+};

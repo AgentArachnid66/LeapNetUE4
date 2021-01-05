@@ -93,6 +93,14 @@ void UNeuralNetwork::Train(TArray<float> inputs, TArray<float> targets ) {
 	
 }
 
+void UNeuralNetwork::TrainIndex(TArray<float> inputs, int targetIndex)
+{
+	TArray<float> targets;
+	targets.Init(0, this->Topology.Last().NeuronsInLayer.Num() - 1);
+	targets[targetIndex] = 1.f;
+	Train(inputs, targets);
+}
+
 void UNeuralNetwork::FeedForward(TArray<float> input)
 {
 	FString test;
@@ -219,6 +227,20 @@ void UNeuralNetwork::SaveCurrentTopology(FString customTopologyName, FString cus
 		UE_LOG(LogTemp, Warning, TEXT("Invalid Save Game Object"));
 	}
 
+}
+
+void UNeuralNetwork::LoadLeapData(FString customSlotName)
+{
+	if (UGameplayStatics::DoesSaveGameExist(customSlotName, 0)) {
+
+		ULeapNeuralData* LeapData = Cast<ULeapNeuralData>(UGameplayStatics::LoadGameFromSlot(customSlotName, 0));
+
+		// Retrieves the topology from the save game object
+		this->trainingData = LeapData->frameData;
+	}
+	else {
+		UE_LOG(LogTemp, Warning, TEXT("No save game found in slot"));
+	}
 }
 
 void UNeuralNetwork::LoadTopologyDefault()
