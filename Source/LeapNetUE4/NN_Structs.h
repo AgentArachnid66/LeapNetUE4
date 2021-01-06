@@ -5,6 +5,13 @@ USTRUCT(BlueprintType)
 struct FSynapse {
 	GENERATED_USTRUCT_BODY()
 
+	FSynapse(){}
+
+	FSynapse(float synapseWeight, int outputNeuron) {
+		weight = synapseWeight;
+		output = outputNeuron;
+	}
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		float weight;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -16,6 +23,14 @@ USTRUCT(BlueprintType)
 struct FNeuron {
 
 	GENERATED_USTRUCT_BODY()
+
+	FNeuron() {	}
+
+	FNeuron(TArray<FSynapse> synapses, float neuronValue, float neuronError) {
+		Connections = synapses;
+		value = neuronValue;
+		error = neuronError;
+	}
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TArray<FSynapse> Connections;
@@ -29,6 +44,17 @@ struct FNeuralLayer {
 
 	GENERATED_USTRUCT_BODY()
 
+	// Default Constructor
+	FNeuralLayer() {
+	}
+
+	/**
+	* Constructor
+	* @param neurons - Neurons in the layer
+	*/
+	FNeuralLayer(TArray<FNeuron> neurons) {
+		NeuronsInLayer = neurons;
+	}
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TArray<FNeuron> NeuronsInLayer;

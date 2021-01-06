@@ -6,6 +6,7 @@
 #include "NN_Structs.h"
 #include "NeuralLayer.h"
 #include "Topologies.h"
+#include "LeapNeuralData.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/ActorComponent.h"
 #include "NeuralNetwork.generated.h"
@@ -60,6 +61,12 @@ public:
 		*/
 		void SaveCurrentTopology(FString topologyName, FString customSlotName);
 
+	UFUNCTION(BlueprintCallable)
+		/**
+		* Loads in the leap data from a save game object. Used for training and testing, instead of run time use
+		* @param customSlotName - The name of the slot to load the data from
+		*/
+		void LoadLeapData(FString customSlotName);
 
 	UFUNCTION(BlueprintCallable)
 		/**
@@ -71,15 +78,28 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 		/**
+		* Trains the network
+		* @param inputs - The inputs to the network
+		* @param targetIndex - The index of the neuron on the output layer
+		*/
+		void TrainIndex(TArray<float> inputs, int targetIndex);
+
+	UFUNCTION(BlueprintCallable)
+		/**
 		* Feeds the inputs given through the network
 		* @param input - The input for the network that will be fed forward.
 		*/
 		void FeedForward(TArray<float> input);
 
+	
+
 #pragma endregion
 
 #pragma region UPROPERTY Variables
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		/** Easy way to set up the topology */
+		TArray<int> baseTopology;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		/** Lightweight way to display and save the topology */
@@ -90,11 +110,14 @@ public:
 		bool bRandomiseWeights;
 
 	
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		// Threshold value for activation function
 		float theta;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		// Learning rate of the network
 		float alpha;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -109,6 +132,7 @@ public:
 		/** Test variable to make sure that the save and loading system was working */
 		bool bPreviouslySaved;
 
+
 #pragma endregion
 
 #pragma region Variables
@@ -121,6 +145,8 @@ public:
 
 	/** Save game to save topologies */
 	class UTopologies* topologies;
+
+	TArray<FFrameData> trainingData;
 
 #pragma endregion
 };
