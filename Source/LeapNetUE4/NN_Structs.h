@@ -37,6 +37,7 @@ struct FNeuron {
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		float value;
 	float error;
+	float sumErrorWeights;
 };
 
 USTRUCT(BlueprintType)

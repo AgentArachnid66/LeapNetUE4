@@ -1,9 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
-
+#include <vector>
 #include "CoreMinimal.h"
 #include "NN_Structs.h"
+
 
 class LEAPNETUE4_API Neuron
 {
@@ -32,6 +33,11 @@ public:
 	*/
 	float GetDerivedValue(float theta);
 
+	/**
+	* Calculates the sum of the weights * the error. Essential for calculating delta weights, but only needs to be called once per neuron per backpropagation pass
+	* @return The sum of the weights multiplied by the error
+	*/
+	float CalculateSumWeightsError(std::vector<Neuron> nextLayerNeurons);
 
 	/**
 	* A quick way to update the neuron data without having to reinitialise the neuron

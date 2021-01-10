@@ -50,7 +50,7 @@ public:
 	* @param target - What the target was for this round of training
 	* @param &prevLayerData - Reference to the previous layer's data structure so that can be updated when needed
 	*/
-	void BackPropagate(NeuralLayer &prevLayer, float alpha, TArray<float> target, FNeuralLayer &prevLayerData);
+	void BackPropagate(NeuralLayer &prevLayer, float alpha, float theta, FNeuralLayer &prevLayerData);
 
 	/**
 	* Easy way to update the neuron data on this layer when needed

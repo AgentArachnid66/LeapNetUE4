@@ -29,5 +29,6 @@ struct FFrameData {
 UENUM(BlueprintType)
 enum NetworkUse {
 	Train UMETA(DisplayName = "Train"),
-	Runtime UMETA(DisplayName = "Runtime"),
+	Test UMETA(DisplayName="Test"),
+	Runtime UMETA(DisplayName = "Runtime")
 };

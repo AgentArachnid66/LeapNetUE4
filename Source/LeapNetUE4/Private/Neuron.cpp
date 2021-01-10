@@ -23,6 +23,8 @@ void Neuron::UpdateNeuronData(FNeuron &data, bool randomiseWeights) {
 		test = FString::SanitizeFloat(r3);
 		UE_LOG(LogTemp, Warning, TEXT("Set Neuron to weight: %s"), *test);
 	}
+	// Updates the UI
+	data = this->neuronData;
 }
 
 Neuron::Neuron(FNeuron &data, bool randomiseWeights, int neuronNumber)
@@ -42,12 +44,12 @@ Neuron::Neuron(FNeuron &data, bool randomiseWeights, int neuronNumber)
 	}
 	for (int synapse = 0; synapse < data.Connections.Num(); synapse++) {
 
-		float r3 = neuronData.Connections[synapse].weight;
-
+		float r3 = neuronData.Connections[synapse].weight;		
 		test = FString::SanitizeFloat(r3);
 		UE_LOG(LogTemp, Warning, TEXT("Set Neuron to weight: %s"), *test);
-	}
 
+	}
+	
 }
 
 Neuron::~Neuron()
@@ -57,10 +59,20 @@ Neuron::~Neuron()
 float Neuron::GetActivatedValue(float theta) {
 	float x = this->neuronData.value - theta;
 	return 1 / (1 + exp(-x));
-	//return this->neuronData.value >= theta ? 1 : 0;
 }
 
 float Neuron::GetDerivedValue(float theta) {
 	float Y = GetActivatedValue(theta);
 	return Y * (1 - Y);
+}
+
+float Neuron::CalculateSumWeightsError(std::vector<Neuron> nextLayerNeurons) {
+	float returnValue = 0;
+	for (int j = 0; j < this->neuronData.Connections.Num(); j++) {
+		returnValue +=
+			nextLayerNeurons.at(this->neuronData.Connections[j].output).neuronData.error*
+			this->neuronData.Connections[j].weight;
+	}
+	this->neuronData.sumErrorWeights = returnValue;
+	return returnValue;
 }

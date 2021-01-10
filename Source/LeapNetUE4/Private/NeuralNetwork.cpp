@@ -43,18 +43,19 @@ void UNeuralNetwork::BeginPlay()
 
 	// Set up the neural network
 
-	// If the user wants to make a basic topology, then this is where it happens
+	// If the user wants to make a basic topology, then this is where it happens 
 	// It needs to convert the TArray of ints to a TArray of FNeuralLayer structs 
-	if (this->baseTopology.Num() > 0) {
+	// Conditions are if the baseTopology has elements and that none of the elements are 0
+	if ((this->baseTopology.Num() > 0) & (!this->baseTopology.Contains(0))) {
 		this->Topology.Empty();
 		// Iterates through all the layers
 		for (int layer = 0; layer < this->baseTopology.Num(); layer++) {
 			TArray<FNeuron> neuronsInLayer;
-			// Iterates through all the neurons in the layer
-			for (int neuron = 0; neuron < this->baseTopology[layer]; neuron++) {
+			// Iterates through all the neurons in the layer. It makes sure it is positive by getting the absolute
+			for (int neuron = 0; neuron < FMath::Abs(this->baseTopology[layer]); neuron++) {
 				TArray<FSynapse> connections;
-				// Iterates through all the ouput neurons to get the connections
-				if (layer < this->baseTopology.Num() - 2) {
+				// Iterates through all the output neurons to get the connections
+				if (layer < this->baseTopology.Num() - 1) {
 
 					for (int output = 0; output < this->baseTopology[layer + 1]; output++) {
 						connections.Add(FSynapse(0, output));
@@ -65,7 +66,6 @@ void UNeuralNetwork::BeginPlay()
 
 			this->Topology.Add(FNeuralLayer(neuronsInLayer));
 		}
-
 
 	}
 
@@ -94,19 +94,37 @@ void UNeuralNetwork::Train(TArray<float> inputs, TArray<float> targets ) {
 
 	// Start the Back Propagation
 
-	// Calculate Error for the output layer
-	// error = target - output
+	// Calculate Total Error for the output layer
+	// Total Error = sum of 1/2*(target - output)^2
+
+	// Calculate individual error terms
+	// Error Terms = target - output
+	float errorTotal = 0;
 	for (int output = 0; output < this->neuralLayers.back().neurons.size(); output++) {
-		Neuron &active = neuralLayers.back().neurons.at(output);
-		active.neuronData.error = targets[output] - active.GetActivatedValue(theta);
+		
+		neuralLayers.back().neurons.at(output).neuronData.error = targets[output] - neuralLayers.back().neurons.at(output).GetActivatedValue(theta);
+		errorTotal += 0.5f * FMath::Pow((targets[output] - neuralLayers.back().neurons.at(output).GetActivatedValue(theta)), 2.f);
+
+		test = FString::SanitizeFloat(errorTotal);
+		UE_LOG(LogTemp, Warning, TEXT("Error Total Delta in iteration: %s"), *test);
 
 		test = FString::SanitizeFloat(neuralLayers.back().neurons.at(output).neuronData.error);
 		UE_LOG(LogTemp, Warning, TEXT("Neuron has error of: %s"), *test);
 
+		test = FString::SanitizeFloat(targets[output]);
+		UE_LOG(LogTemp, Warning, TEXT("Target for this neuron: %s"), *test);
+
+		test = FString::SanitizeFloat(neuralLayers.back().neurons.at(output).GetActivatedValue(theta));
+		UE_LOG(LogTemp, Warning, TEXT("Neuron's Output Value: %s"), *test);
+
+		// BackPropagation relies on a variable called sumErrorWeights. Instead of further complicating that 
+		// code, I'll just make the neurons in this layer's sumErrorWeights = error
+		neuralLayers.back().neurons.at(output).neuronData.sumErrorWeights = neuralLayers.back().neurons.at(output).neuronData.error;
 
 	}
-	test = FString::FromInt(this->Topology.Num() - 1);
-	UE_LOG(LogTemp, Warning, TEXT("Number of layers: %s"), *test);
+
+	test = FString::SanitizeFloat(errorTotal);
+	UE_LOG(LogTemp, Warning, TEXT("Total Error: %s"), *test);
 
 
 	
@@ -114,18 +132,24 @@ void UNeuralNetwork::Train(TArray<float> inputs, TArray<float> targets ) {
 	for (int layer = this->Topology.Num() - 1; layer > 0; layer--) {
 		test = FString::FromInt(layer);
 		UE_LOG(LogTemp, Warning, TEXT("Layer %s Started Back Propagation"), *test);
-		neuralLayers.at(layer).BackPropagate(neuralLayers.at(layer - 1), this->alpha, inputs, this->Topology[layer-1]);
-
+		neuralLayers.at(layer).BackPropagate(neuralLayers.at(layer - 1), this->alpha, this->theta, this->Topology[layer - 1]);
 	}
 	
 }
 
 void UNeuralNetwork::TrainIndex(TArray<float> inputs, int targetIndex)
 {
-	TArray<float> targets;
-	targets.Init(0, this->Topology.Last().NeuronsInLayer.Num() - 1);
-	targets[targetIndex] = 1.f;
-	Train(inputs, targets);
+	// If the target index is valid then it can be used for training
+	if (targetIndex < neuralLayers.back().neurons.size()) {
+		TArray<float> targets;
+		targets.Init(0, neuralLayers.back().neurons.size());
+		targets[targetIndex] = 1.f;
+		Train(inputs, targets);
+	}
+	// Else it just prints an error message to the log
+	else {
+		UE_LOG(LogTemp, Warning, TEXT("Target Index was Invalid"));
+	}
 }
 
 void UNeuralNetwork::FeedForward(TArray<float> input)
@@ -151,8 +175,11 @@ void UNeuralNetwork::FeedForward(TArray<float> input)
 
 		// Looks for the output layer
 		else {
-			test = FString::SanitizeFloat(neuralLayers.at(layer).neurons[0].GetActivatedValue(theta));
-			UE_LOG(LogTemp, Warning, TEXT("Final Value: %s"), *test);
+			// Iterates through output layer neurons
+			for (int outputNeuron = 0; outputNeuron < neuralLayers.at(layer).neurons.size(); outputNeuron++) {
+				test = FString::SanitizeFloat(neuralLayers.at(layer).neurons[outputNeuron].GetActivatedValue(theta));
+				UE_LOG(LogTemp, Warning, TEXT("Final Value: %s"), *test);
+			}
 		}
 
 	}
