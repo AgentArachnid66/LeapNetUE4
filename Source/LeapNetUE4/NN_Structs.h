@@ -26,16 +26,19 @@ struct FNeuron {
 
 	FNeuron() {	}
 
-	FNeuron(TArray<FSynapse> synapses, float neuronValue, float neuronError) {
+	FNeuron(TArray<FSynapse> synapses, float neuronValue, float neuronError, float thresholdValue) {
 		Connections = synapses;
 		value = neuronValue;
 		error = neuronError;
+		theta = thresholdValue;
 	}
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TArray<FSynapse> Connections;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		float value;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		float theta;
 	float error;
 	float sumErrorWeights;
 };

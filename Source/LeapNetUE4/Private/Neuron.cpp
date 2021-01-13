@@ -56,13 +56,13 @@ Neuron::~Neuron()
 {
 }
 
-float Neuron::GetActivatedValue(float theta) {
-	float x = this->neuronData.value - theta;
+float Neuron::GetActivatedValue() {
+	float x = this->neuronData.value - this->neuronData.theta;
 	return 1 / (1 + exp(-x));
 }
 
-float Neuron::GetDerivedValue(float theta) {
-	float Y = GetActivatedValue(theta);
+float Neuron::GetDerivedValue() {
+	float Y = GetActivatedValue();
 	return Y * (1 - Y);
 }
 
@@ -73,6 +73,8 @@ float Neuron::CalculateSumWeightsError(std::vector<Neuron> nextLayerNeurons) {
 			nextLayerNeurons.at(this->neuronData.Connections[j].output).neuronData.error*
 			this->neuronData.Connections[j].weight;
 	}
+	FString test = FString::SanitizeFloat(returnValue);
+	UE_LOG(LogTemp, Warning, TEXT("Sum of weights * error: %s"), *test);
 	this->neuronData.sumErrorWeights = returnValue;
 	return returnValue;
 }

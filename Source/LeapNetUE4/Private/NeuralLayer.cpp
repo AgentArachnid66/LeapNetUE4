@@ -43,30 +43,65 @@ NeuralLayer::~NeuralLayer()
 {
 }
 
-void NeuralLayer::FeedForward(NeuralLayer &nextLayer, float theta, FNeuralLayer &Topology) {
+bool NeuralLayer::FeedForward(NeuralLayer &nextLayer, FNeuralLayer &Topology) {
 	FString test;
-	
+	bool success = true;
+	vector<bool> visitedNeurons(nextLayer.neurons.size(), false);
+
 	// Iterates through all neurons in this layer
 	for (int neuron = 0; neuron < this->neurons.size(); neuron++) {
 		test = FString::FromInt(neuron);
 		UE_LOG(LogTemp, Warning, TEXT("Neuron %s started forward propagation"), *test);
 
+
+
 		// Iterates through all connections this neuron has with the neurons in the next layer
 		for (int synapse = 0; synapse < this->neurons[neuron].neuronData.Connections.Num(); synapse++) {
+
+
 
 			// local variable to save me writing this out everytime I want to reference the right thing :)
 			int active = this->neurons[neuron].neuronData.Connections[synapse].output;
 
+			// Checks to see if the layer is the input and if so, skip the activation and if it's the hidden layer then it's the activated
+			float value = this->layerNum >= 1 ? this->neurons[neuron].GetActivatedValue() : this->neurons[neuron].neuronData.value;
+
 			// Next neuron's value is equal to the sum of all neurons connected to it's value * the weight 
 			// of the connection from that neuron.
-			if (neuron == 0) {
-				nextLayer.neurons[active].neuronData.value = this->neurons[neuron].neuronData.value
+
+			// Checks if this is the first time we are looking at this neuron
+			if (!visitedNeurons.at(active)) {
+
+				
+				// Overwrites the neuron value
+				nextLayer.neurons[active].neuronData.value = value
 					* this->neurons[neuron].neuronData.Connections[synapse].weight;
+				
+				test = FString::SanitizeFloat(value);
+				UE_LOG(LogTemp, Warning, TEXT("Neuron Value: %s"), *test);
+
+				test = FString::SanitizeFloat(this->neurons[neuron].neuronData.Connections[synapse].weight);
+				UE_LOG(LogTemp, Warning, TEXT("Neuron Weight: %s"), *test);
+
+				test = FString::SanitizeFloat(nextLayer.neurons[active].neuronData.value);
+				UE_LOG(LogTemp, Warning, TEXT("First input: %s"), *test);
+
+				// Marks neuron as visited
+				visitedNeurons.at(active) = true;
 			}
+			// Otherwise we continue the sum
 			else {
-				nextLayer.neurons[active].neuronData.value += this->neurons[neuron].neuronData.value
+				nextLayer.neurons[active].neuronData.value += value
 					* this->neurons[neuron].neuronData.Connections[synapse].weight;
 
+				test = FString::SanitizeFloat(value);
+				UE_LOG(LogTemp, Warning, TEXT("Neuron Value: %s"), *test);
+
+				test = FString::SanitizeFloat(this->neurons[neuron].neuronData.Connections[synapse].weight);
+				UE_LOG(LogTemp, Warning, TEXT("Neuron Weight: %s"), *test);
+
+				test = FString::SanitizeFloat(nextLayer.neurons[active].neuronData.value);
+				UE_LOG(LogTemp, Warning, TEXT("Sum so far: %s"), *test);
 			}
 		}
 
@@ -77,10 +112,14 @@ void NeuralLayer::FeedForward(NeuralLayer &nextLayer, float theta, FNeuralLayer 
 
 	}
 
+	return success;
+
 }
 
-void NeuralLayer::BackPropagate(NeuralLayer &prevLayer, float alpha, float theta, FNeuralLayer &prevLayerData) {
+void NeuralLayer::BackPropagate(NeuralLayer &prevLayer, float alpha, FNeuralLayer &prevLayerData) {
 	FString test;
+
+	
 
 	test = FString::SanitizeFloat(alpha);
 	UE_LOG(LogTemp, Warning, TEXT("Learning rate: %s"), *test);
@@ -91,18 +130,23 @@ void NeuralLayer::BackPropagate(NeuralLayer &prevLayer, float alpha, float theta
 		test = FString::FromInt(prevLayer.neurons.at(neuron).neuronData.Connections.Num());
 		UE_LOG(LogTemp, Warning, TEXT("Neurons in layer: %s"), *test);
 
-		
+		float theta = prevLayer.neurons.at(neuron).neuronData.theta;
 		// Calculates error for each neuron in this layer, which we know isn't the output layer
-		// Error Term = derivation of sigmoid * sum of (weight to next layer * error term in next layer)
-		float errorTerm = prevLayer.neurons.at(neuron).CalculateSumWeightsError(this->neurons) *
-			prevLayer.neurons.at(neuron).GetDerivedValue(theta);
 
-		prevLayer.neurons.at(neuron).neuronData.error = errorTerm;
-		// Now we know the error term of this neuron we can work out how to change the weights
+		// If it is the hidden layers then:
+		// Error Term = derivation of sigmoid * sum of (weight to next layer * error term in next layer)
+
+		// Input layer:
+		// Error Term = input * sum of (weight to next layer * error term in next layer)
+
+		float x = prevLayer.layerNum == 0 ? prevLayer.neurons.at(neuron).neuronData.value : prevLayer.neurons.at(neuron).GetDerivedValue();
 		
+		prevLayer.neurons.at(neuron).neuronData.error = prevLayer.neurons.at(neuron).CalculateSumWeightsError(this->neurons) * x;
+		
+		// Now we know the error term of this neuron we can work out how to change the weights
 			
 		test = FString::SanitizeFloat(prevLayer.neurons.at(neuron).neuronData.error);
-		UE_LOG(LogTemp, Warning, TEXT("Neuron has error: %s"), *test);
+		UE_LOG(LogTemp, Warning, TEXT("Neuron has error term: %s"), *test);
 
 		test = FString::FromInt(prevLayer.neurons.at(neuron).neuronData.Connections.Num());
 		UE_LOG(LogTemp, Warning, TEXT("Neuron has %s connections"), *test);
@@ -115,33 +159,60 @@ void NeuralLayer::BackPropagate(NeuralLayer &prevLayer, float alpha, float theta
 			// Gets the connected neuron
 			int errorNeuron = prevLayer.neurons.at(neuron).neuronData.Connections[synapse].output;
 
-			// Calculates the connections new weight
-
-				// delta weight = 
-				// -learning rate * 
-				// Derivative of activation * 
-				// input * 
-				// sum of (weights * error term of next layer)
-
-			float newWeight = alpha * prevLayer.neurons.at(neuron).GetDerivedValue(theta);
-			newWeight *= prevLayer.neurons.at(neuron).neuronData.value;
-			newWeight *= this->neurons.at(errorNeuron).neuronData.sumErrorWeights;
-			
-			// Debug Messages
-			test = FString::SanitizeFloat(prevLayer.neurons.at(neuron).GetDerivedValue(theta));
-			UE_LOG(LogTemp, Warning, TEXT("Derived Value: %s"), *test);
-
-			test = FString::SanitizeFloat(prevLayer.neurons.at(neuron).neuronData.value);
-			UE_LOG(LogTemp, Warning, TEXT("Value: %s"), *test);
-
-			test = FString::SanitizeFloat(this->neurons.at(errorNeuron).neuronData.sumErrorWeights);
-			UE_LOG(LogTemp, Warning, TEXT("Sum of Error and Weights: %s"), *test);
-
-			test = FString::SanitizeFloat(newWeight);
-			UE_LOG(LogTemp, Warning, TEXT("Delta Weight: %s"), *test);
+			// Safety check to make sure that the neuron that this is outputting to exists
+			if (errorNeuron < this->neurons.size()) {
 
 
-			prevLayer.neurons.at(neuron).neuronData.Connections[synapse].weight -= newWeight;
+				// Calculates the connections new weight
+
+					// delta weight = 
+					// learning rate * 
+					// input * 
+					// error term
+
+				float newWeight = alpha *
+					prevLayer.neurons.at(neuron).GetActivatedValue() *
+					this->neurons.at(errorNeuron).neuronData.error;
+
+				// Debug Messages
+				test = FString::SanitizeFloat(prevLayer.neurons.at(neuron).GetDerivedValue());
+				UE_LOG(LogTemp, Warning, TEXT("Derived Value: %s"), *test);
+
+				test = FString::SanitizeFloat(prevLayer.neurons.at(neuron).GetActivatedValue());
+				UE_LOG(LogTemp, Warning, TEXT("Value: %s"), *test);
+
+				test = FString::SanitizeFloat(this->neurons.at(errorNeuron).neuronData.sumErrorWeights);
+				UE_LOG(LogTemp, Warning, TEXT("Sum of Error and Weights: %s"), *test);
+
+				test = FString::SanitizeFloat(newWeight);
+				UE_LOG(LogTemp, Warning, TEXT("Delta Weight: %s"), *test);
+
+
+
+				// Calculate delta theta
+				// = alpha * error term of neuron
+
+				// Debug Messages
+				test = FString::SanitizeFloat(this->neurons.at(errorNeuron).neuronData.error);
+				UE_LOG(LogTemp, Warning, TEXT("Error term for delta theta calculation: %s"), *test);
+
+				test = FString::SanitizeFloat(-1.f*alpha*this->neurons.at(errorNeuron).neuronData.error);
+				UE_LOG(LogTemp, Warning, TEXT("Delta Theta: %s"), *test);
+
+				// Apply Delta Theta
+				this->neurons.at(errorNeuron).neuronData.theta += -1.f*alpha*this->neurons.at(errorNeuron).neuronData.error;
+
+				// Outputs the new theta value
+				test = FString::SanitizeFloat(this->neurons.at(errorNeuron).neuronData.theta);
+				UE_LOG(LogTemp, Warning, TEXT("New Theta: %s"), *test);
+
+				// Apply Delta Weight
+				prevLayer.neurons.at(neuron).neuronData.Connections[synapse].weight += newWeight;
+			}
+
+			else {
+				UE_LOG(LogTemp, Warning, TEXT("Output Neuron doesn't exist"));
+			}
 		}
 
 		// Updates UI
@@ -150,11 +221,34 @@ void NeuralLayer::BackPropagate(NeuralLayer &prevLayer, float alpha, float theta
 }
 
 // Mainly used for the input layer
-void NeuralLayer::SetInputValues(TArray<float> inputs) {
+bool NeuralLayer::SetInputValues(TArray<float> inputs, bool bEnableBias) {
 
-	// Goes through the layer and sets the neuron values to a new float 
-	for (int neuron = 0; neuron < this->neurons.size(); neuron++) {
-		this->neurons.at(neuron).neuronData.value = inputs[neuron];
+	FString test = FString::FromInt(inputs.Num());
+	UE_LOG(LogTemp, Warning, TEXT("Number of elements in input: %s"), *test);
+
+	// Checks if the number of inputs matches the number of input neurons minus the bias neuron
+	if (inputs.Num() <= this->neurons.size()) {
+
+		// Goes through the layer and sets the neuron values to a new float, 
+		// but takes into account the bias neuron if one exists
+		for (int neuron = 0; neuron < (this->neurons.size() ); neuron++) {
+
+			// Made the function less reliant on the existence of a bias node
+			// by checking if the 
+			if (bEnableBias) {
+				UE_LOG(LogTemp, Warning, TEXT("Skipping Bias Node"));
+			}
+			else {
+				this->neurons.at(neuron).neuronData.value = inputs[neuron];
+			}
+		}
+		UE_LOG(LogTemp, Warning, TEXT("Input layer values were set successfully"));
+		return true;
+	}
+	else {
+		test = FString::FromInt(this->neurons.size());
+		UE_LOG(LogTemp, Warning, TEXT("Input array is bigger than Input Layer array: %s"), *test);
+		return false;
 	}
 
 }

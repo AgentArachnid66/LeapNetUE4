@@ -21,17 +21,15 @@ public:
 
 	/**
 	* Gets the activated value of the neuron. It's a non-destructive way of achieving this as it doesn't change the value of the neuron
-	* @param theta - The threshold value of the function.
 	* @return the activated value. In this case I'm using the Sigmoid function	
 	*/
-	float GetActivatedValue(float theta);
+	float GetActivatedValue();
 
 	/**
 	* Gets the derivation of the value. Essential for the training of the neural network
-	* @param theta - The threshold value of the function
 	* @return the derived value. Since I'm using Sigmoid to find the activated value, I'll find the derivation of the Sigmoid function at the x value equal to the value of the neuron
 	*/
-	float GetDerivedValue(float theta);
+	float GetDerivedValue();
 
 	/**
 	* Calculates the sum of the weights * the error. Essential for calculating delta weights, but only needs to be called once per neuron per backpropagation pass

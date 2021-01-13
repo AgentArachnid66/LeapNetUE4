@@ -33,6 +33,12 @@ public:
 #pragma region UFUNCTIONS
 
 
+	UFUNCTION(BlueprintCallable, CallInEditor)
+		/**
+		* Initialises the topology, separating it from BeginPlay to give more control over the initialisation itself.
+		*/
+		void Initialise();
+
 		/**
 		* Loads a topology. This is a more advanced way to save a topology as you have more options for slots and don't have to change the classes variable
 		* @param topologyName - The name of the Topology to load in
@@ -73,8 +79,9 @@ public:
 		* Trains the network
 		* @param inputs - The inputs for the network to feed forward through the network
 		* @param targets - The target values that the network is trying to get to, will be used for back propagation
+		* @return - Whether or not the training operation ran successfully
 		*/
-		void Train(TArray<float> inputs, TArray<float> targets);
+		bool Train(TArray<float> inputs, TArray<float> targets);
 
 	UFUNCTION(BlueprintCallable)
 		/**
@@ -82,14 +89,15 @@ public:
 		* @param inputs - The inputs to the network
 		* @param targetIndex - The index of the neuron on the output layer
 		*/
-		void TrainIndex(TArray<float> inputs, int targetIndex);
+		bool TrainIndex(TArray<float> inputs, int targetIndex);
 
 	UFUNCTION(BlueprintCallable)
 		/**
 		* Feeds the inputs given through the network
 		* @param input - The input for the network that will be fed forward.
+		* @return Whether the feed forward was carried out successfully
 		*/
-		void FeedForward(TArray<float> input);
+		bool FeedForward(TArray<float> input);
 
 	
 
@@ -107,18 +115,23 @@ public:
 		
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		/** Used for initialisation */
-		bool bRandomiseWeights;
+		bool bRandomiseWeights = true;
 
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		/** Quick way to disable the bias for development purposes */
+		bool bEnableBias = true;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		bool bOverwriteTheta;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		// Threshold value for activation function
-		float theta;
+		float theta = 0.2f;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		// Learning rate of the network
-		float alpha;
+		float alpha = 0.01f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		/** Name of the Current topology. Change before saving and loading to get the appropriate results */

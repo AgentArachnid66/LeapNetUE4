@@ -39,9 +39,9 @@ public:
 	* Feeds the values from this layer into the next one
 	* @param &nextLayer - A reference to the next layer in the network so this layer can access those neurons. MUST BE STOPPED BEFORE LAST LAYER TRIES TO FEED TO LAYER THAT DOESN'T EXIST
 	* @param theta - Threshold value for the neuron's activation and derivation functions
-	* @param &Topology - Reference to the data structure that is used for saving and loading so it's updated when needed
+	* @return Whether the feed forward for this layer was successful
 	*/
-	void FeedForward(NeuralLayer &nextLayer, float theta, FNeuralLayer &Topology);
+	bool FeedForward(NeuralLayer &nextLayer, FNeuralLayer &Topology);
 
 	/**
 	* Propagates the errors back through the network, providing the back bone for the learning and training of the network
@@ -50,7 +50,7 @@ public:
 	* @param target - What the target was for this round of training
 	* @param &prevLayerData - Reference to the previous layer's data structure so that can be updated when needed
 	*/
-	void BackPropagate(NeuralLayer &prevLayer, float alpha, float theta, FNeuralLayer &prevLayerData);
+	void BackPropagate(NeuralLayer &prevLayer, float alpha, FNeuralLayer &prevLayerData);
 
 	/**
 	* Easy way to update the neuron data on this layer when needed
@@ -62,6 +62,8 @@ public:
 	/**
 	* Sets the input values on this layer. Advised to only use this on the first layer and then use feedforward to propagate. Also make sure that the length of the input array and the size of the layer match.
 	* @param inputs - The new values of the neurons on this layer, with neuron[0] being set to input[0], neuron[n] being set to input[n]
+	* @param bEnableBias - Boolean to ensure an easy way to ensure that the bias is excluded or included. Useful for testing. True for the bias to be skipped when setting the values and false for it to be overwritten and treated like a usual neuron 
+	* @return Whether the input values were set correctly
 	*/
-	void SetInputValues(TArray<float> inputs);
+	bool SetInputValues(TArray<float> inputs, bool bEnableBias);
 };
