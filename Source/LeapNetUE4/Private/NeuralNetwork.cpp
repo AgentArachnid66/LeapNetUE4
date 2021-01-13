@@ -68,13 +68,12 @@ void UNeuralNetwork::Initialise() {
 				neuronsInLayer.Add(FNeuron(connections, 0, 0, this->theta));
 			}
 
-			if (layer < this->baseTopology.Num() - 1) {
+			if ((layer < this->baseTopology.Num() - 1)&(bEnableBias)) {
+
 				// Adds Bias neuron separately to hidden layers
 				UE_LOG(LogTemp, Warning, TEXT("Added Bias Neuron"));
-				float value = bEnableBias ? 1.f : 0.f;
 
-
-				neuronsInLayer.Add(FNeuron(neuronsInLayer.Last().Connections, value, 0, this->theta));
+				neuronsInLayer.Add(FNeuron(neuronsInLayer.Last().Connections, 1, 0, this->theta));
 			}
 			this->Topology.Add(FNeuralLayer(neuronsInLayer));
 		}
@@ -114,9 +113,14 @@ bool UNeuralNetwork::Train(TArray<float> inputs, TArray<float> targets ) {
 
 		// Calculate individual error terms
 		// Error Terms = derivation of sigmoid * (target - output)
+		UE_LOG(LogTemp,Warning,TEXT("############## Output Layer ###########"))
+
 		float errorTotal = 0;
 		for (int output = 0; output < this->neuralLayers.back().neurons.size(); output++) {
-			
+
+			test = FString::FromInt(output);
+			UE_LOG(LogTemp, Warning, TEXT("############## Neuron %s ###########"), *test);
+
 			if (targets.Num() > this->neuralLayers.back().neurons.size()) {
 				UE_LOG(LogTemp, Warning, TEXT("Target array is larger than output layer "));
 				return false;
@@ -128,8 +132,6 @@ bool UNeuralNetwork::Train(TArray<float> inputs, TArray<float> targets ) {
 				
 				errorTotal += 0.5f * FMath::Pow((targets[output] - neuralLayers.back().neurons.at(output).GetActivatedValue()), 2.f);
 
-				test = FString::SanitizeFloat(errorTotal);
-				UE_LOG(LogTemp, Warning, TEXT("Error Total Delta in iteration: %s"), *test);
 
 				test = FString::SanitizeFloat(neuralLayers.back().neurons.at(output).neuronData.error);
 				UE_LOG(LogTemp, Warning, TEXT("Neuron has error of: %s"), *test);
@@ -140,8 +142,7 @@ bool UNeuralNetwork::Train(TArray<float> inputs, TArray<float> targets ) {
 				test = FString::SanitizeFloat(neuralLayers.back().neurons.at(output).GetActivatedValue());
 				UE_LOG(LogTemp, Warning, TEXT("Neuron's Output Value: %s"), *test);
 
-				// BackPropagation relies on a variable called sumErrorWeights. Instead of further complicating that 
-				// code, I'll just make the neurons in this layer's sumErrorWeights = error
+
 				neuralLayers.back().neurons.at(output).neuronData.sumErrorWeights = neuralLayers.back().neurons.at(output).neuronData.error;
 			}
 		}

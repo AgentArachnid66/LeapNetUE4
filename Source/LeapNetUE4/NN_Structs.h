@@ -1,6 +1,14 @@
 #pragma once
 #include "NN_Structs.generated.h"
 
+UENUM(BlueprintType)
+enum NeuronType {
+	Input,
+	Hidden,
+	Output
+};
+
+
 USTRUCT(BlueprintType)
 struct FSynapse {
 	GENERATED_USTRUCT_BODY()
@@ -39,6 +47,8 @@ struct FNeuron {
 		float value;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		float theta;
+
+	NeuronType type;
 	float error;
 	float sumErrorWeights;
 };

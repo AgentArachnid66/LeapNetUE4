@@ -38,6 +38,11 @@ public:
 	float CalculateSumWeightsError(std::vector<Neuron> nextLayerNeurons);
 
 	/**
+	* Calculates the Error Term for this neuron. Essential for calculating delta weights
+	*/
+	float CalculateErrorTerms(std::vector<Neuron> nextLayerNeurons);
+
+	/**
 	* A quick way to update the neuron data without having to reinitialise the neuron
 	* @param &data - A reference to the data to pass into the neuron to replace the current data
 	* @param bRandomiseWeights - A Boolean to control whether or not the update should come with a new set of weights for the connections
