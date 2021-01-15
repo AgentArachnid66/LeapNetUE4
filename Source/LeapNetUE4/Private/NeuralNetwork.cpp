@@ -156,7 +156,7 @@ bool UNeuralNetwork::Train(TArray<float> inputs, TArray<float> targets ) {
 		for (int layer = this->Topology.Num() - 1; layer > 0; layer--) {
 			test = FString::FromInt(layer);
 			UE_LOG(LogTemp, Warning, TEXT("Layer %s Started Back Propagation"), *test);
-			neuralLayers.at(layer).BackPropagate(neuralLayers.at(layer - 1), this->alpha, this->Topology[layer - 1]);
+			neuralLayers.at(layer).BackPropagate(neuralLayers.at(layer - 1), this->alpha, this->Topology[layer - 1], this->bEnableBias);
 		}
 		return true;
 	}
@@ -203,7 +203,7 @@ bool UNeuralNetwork::FeedForward(TArray<float> input)
 				UE_LOG(LogTemp, Warning, TEXT("Fed through Layer: %s"), *test);
 
 				// Feeds the input through the network
-				success = neuralLayers.at(layer).FeedForward(this->neuralLayers.at(layer + 1), this->Topology[layer]);
+				success = neuralLayers.at(layer).FeedForward(this->neuralLayers.at(layer + 1), this->Topology[layer], this->bEnableBias);
 			}
 
 			// Looks for the output layer

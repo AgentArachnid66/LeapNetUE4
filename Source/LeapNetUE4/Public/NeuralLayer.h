@@ -41,7 +41,7 @@ public:
 	* @param theta - Threshold value for the neuron's activation and derivation functions
 	* @return Whether the feed forward for this layer was successful
 	*/
-	bool FeedForward(NeuralLayer &nextLayer, FNeuralLayer &Topology);
+	bool FeedForward(NeuralLayer &nextLayer, FNeuralLayer &Topology, bool bEnableBias);
 
 	/**
 	* Propagates the errors back through the network, providing the back bone for the learning and training of the network
@@ -50,7 +50,7 @@ public:
 	* @param target - What the target was for this round of training
 	* @param &prevLayerData - Reference to the previous layer's data structure so that can be updated when needed
 	*/
-	void BackPropagate(NeuralLayer &prevLayer, float alpha, FNeuralLayer &prevLayerData);
+	void BackPropagate(NeuralLayer &prevLayer, float alpha, FNeuralLayer &prevLayerData, bool bEnableBias);
 
 	/**
 	* Easy way to update the neuron data on this layer when needed

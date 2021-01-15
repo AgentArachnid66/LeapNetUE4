@@ -13,6 +13,16 @@ NeuralLayer::NeuralLayer(FNeuralLayer &layerInfo, bool randomiseWeights, int lay
 		test = FString::FromInt(neuron);
 		UE_LOG(LogTemp, Warning, TEXT("Added Neuron %s to layer"), *test);
 		
+		// If the layer number is 0 then it is the input layer, so all neurons should be of type input
+
+		// If it has no connections, then it is an output neuron as all neurons without connections in hidden layers
+		// should be removed by an optimiser that'll be implemented in future
+
+		// If it has at least 1 connection then it is a hidden neuron
+
+		this->neurons.back().neuronData.type = layerNumber == 0 ? NeuronType::Input : this->neurons.back().neuronData.Connections.Num() > 0 ? NeuronType::Hidden : NeuronType::Output;
+
+
 		// Updates the UI
 		layerInfo.NeuronsInLayer[neuron] = this->neurons.back().neuronData;
 	}
@@ -43,7 +53,7 @@ NeuralLayer::~NeuralLayer()
 {
 }
 
-bool NeuralLayer::FeedForward(NeuralLayer &nextLayer, FNeuralLayer &Topology) {
+bool NeuralLayer::FeedForward(NeuralLayer &nextLayer, FNeuralLayer &Topology, bool bEnableBias) {
 	FString test;
 	bool success = true;
 	vector<bool> visitedNeurons(nextLayer.neurons.size(), false);
@@ -63,9 +73,10 @@ bool NeuralLayer::FeedForward(NeuralLayer &nextLayer, FNeuralLayer &Topology) {
 			// local variable to save me writing this out everytime I want to reference the right thing :)
 			int active = this->neurons[neuron].neuronData.Connections[synapse].output;
 
-			// Checks to see if the layer is the input and if so, skip the activation and if it's the hidden layer then it's the activated
+			// Checks to see if the layer is the input or bias and if so, skip the activation and if it's the hidden layer then it's the activated
 			float value = this->layerNum >= 1 ? this->neurons[neuron].GetActivatedValue() : this->neurons[neuron].neuronData.value;
-
+			value = (bEnableBias) & (neuron == this->neurons.size() - 1) ? this->neurons[neuron].neuronData.value : value;
+			
 			// Next neuron's value is equal to the sum of all neurons connected to it's value * the weight 
 			// of the connection from that neuron.
 
@@ -116,7 +127,7 @@ bool NeuralLayer::FeedForward(NeuralLayer &nextLayer, FNeuralLayer &Topology) {
 
 }
 
-void NeuralLayer::BackPropagate(NeuralLayer &prevLayer, float alpha, FNeuralLayer &prevLayerData) {
+void NeuralLayer::BackPropagate(NeuralLayer &prevLayer, float alpha, FNeuralLayer &prevLayerData, bool bEnableBias) {
 	FString test;
 
 
@@ -152,24 +163,78 @@ void NeuralLayer::BackPropagate(NeuralLayer &prevLayer, float alpha, FNeuralLaye
 			// Safety check to make sure that the neuron that this is outputting to exists
 			if (errorNeuron < this->neurons.size()) {
 
+				// If it is a hidden layer then take the activated value
+				// Otherwise (ie if it is an input layer or a bias neuron than the normal value)
+
+				float value = 0;
+				switch (prevLayer.neurons.at(neuron).neuronData.type) {
+				case NeuronType::Input:
+
+					// Input is it's own value, which means the only deviation the bias needs is it's own debug message
+					value = prevLayer.neurons.at(neuron).neuronData.value;
+					test = FString::SanitizeFloat(value);
+
+					if ((neuron == prevLayer.neurons.size() - 1) & (bEnableBias)) {
+
+
+						UE_LOG(LogTemp, Warning, TEXT("Bias Neuron is in the Input Layer. Value is %s"),*test);
+					}
+
+					else {
+
+
+						UE_LOG(LogTemp, Warning, TEXT("Neuron is in the Input Layer. Value is %s"),*test);
+					}
+					break;
+
+				case NeuronType::Hidden:
+
+					if ((neuron == prevLayer.neurons.size() - 1) & (bEnableBias)) {
+						// Bias Neurons are always it's own value
+						value = prevLayer.neurons.at(neuron).neuronData.value;
+
+						test = FString::SanitizeFloat(value);
+						UE_LOG(LogTemp, Warning, TEXT("Bias Neuron is in the Input Layer. Value is %s"),*test);
+					}
+
+					else {
+						// Hidden Neurons that aren't the bias give their activated value
+						value = prevLayer.neurons.at(neuron).GetActivatedValue();
+
+						test = FString::SanitizeFloat(value);
+						UE_LOG(LogTemp, Warning, TEXT("Neuron is in the Hidden Layer. Activated Value is %s"),*test);
+					}
+					break;
+
+				case NeuronType::Output:
+					// The previous layer is never going to be the output layer, so we can 
+					// safely ignore this case.
+					break;
+				}
+
 
 				// Calculates the connections new weight
 
 					// delta weight = 
 					// learning rate * 
-					// input * 
+					// input (not activated for input or bias neurons) * 
 					// error term
 
 				float newWeight = alpha *
-					prevLayer.neurons.at(neuron).GetActivatedValue() *
-					this->neurons.at(errorNeuron).neuronData.sumErrorWeights;
+					value *
+					this->neurons.at(errorNeuron).neuronData.error;
 
 				// Debug Messages
 				test = FString::SanitizeFloat(prevLayer.neurons.at(neuron).GetDerivedValue());
 				UE_LOG(LogTemp, Warning, TEXT("Derived Value: %s"), *test);
 
-				test = FString::SanitizeFloat(prevLayer.neurons.at(neuron).GetActivatedValue());
-				UE_LOG(LogTemp, Warning, TEXT("Activated Value: %s"), *test);
+
+
+
+
+
+				test = FString::SanitizeFloat(value);
+				UE_LOG(LogTemp, Warning, TEXT("Value: %s"), *test);
 
 				test = FString::SanitizeFloat(this->neurons.at(errorNeuron).neuronData.sumErrorWeights);
 				UE_LOG(LogTemp, Warning, TEXT("Sum of Error and Weights: %s"), *test);

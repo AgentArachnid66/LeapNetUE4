@@ -63,6 +63,11 @@ float Neuron::GetActivatedValue() {
 
 float Neuron::GetDerivedValue() {
 	float Y = GetActivatedValue();
+
+	// Debug Message to double check the maths
+	FString test = FString::SanitizeFloat(Y);
+	UE_LOG(LogTemp, Warning, TEXT("%s"), *test);
+
 	return Y * (1 - Y);
 }
 
