@@ -22,7 +22,7 @@ To optimise my application, it might be a good idea to transfer the learning asp
 
 Another optimisation method that I could still do is convert my functions into async functions and implement multi threading, therefore it's removed from the main thread and won't cause as bad as a drag on the performance. Given I'm going to optimise for VR anyway, this seems like a good idea anyway. I'll work on this after I have the back propagation. 
 
-In addition to the above changes, I would also like to add some additionaly safe guards for users as I'm running into a problem that many developers face which is that I'm getting too used to my plugin and know how to avoid the errors that can cause it to crash, which end users won't immediately know. I'll use MantisBT to help me keep check of the bugs amd to help get them organised. 
+In addition to the above changes, I would also like to add some additionaly safe guards for users as I'm running into a problem that many developers face which is that I'm getting too used to my plugin and know how to avoid the errors that can cause it to crash, which end users won't immediately know. I'll use MantisBT to help me keep check of the bugs and to help get them organised. 
 
 </n>
 <b> 14/01/2021 Commit Update </b>
