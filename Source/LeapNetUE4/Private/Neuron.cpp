@@ -66,7 +66,7 @@ float Neuron::GetDerivedValue() {
 
 	// Debug Message to double check the maths
 	FString test = FString::SanitizeFloat(Y);
-	UE_LOG(LogTemp, Warning, TEXT("%s"), *test);
+	UE_LOG(LogTemp, Warning, TEXT("Activated Value: %s"), *test);
 
 	return Y * (1 - Y);
 }
@@ -77,20 +77,27 @@ float Neuron::CalculateSumWeightsError(std::vector<Neuron> nextLayerNeurons) {
 	for (int j = 0; j < this->neuronData.Connections.Num(); j++) {
 
 		// Debug Messages
+
 		test = FString::FromInt(this->neuronData.Connections[j].output);
-		UE_LOG(LogTemp, Warning, TEXT("###### Output Neuron %s ######"), *test);
+		UE_LOG(LogTemp, Warning, TEXT("###### Output Connected Neuron %s ######"), *test);
+
+		// Error term of the connected neuron in the next layer
 		test = FString::SanitizeFloat(nextLayerNeurons.at(this->neuronData.Connections[j].output).neuronData.error);
 		UE_LOG(LogTemp, Warning, TEXT("###### Error Term: %s ######"), *test);
+	
+		// Weight of the connection to that layer
 		test = FString::SanitizeFloat(this->neuronData.Connections[j].weight);
 		UE_LOG(LogTemp, Warning, TEXT("###### Weight of Connection: %s ######"), *test);
 
-
+		// Adds onto sum
 		returnValue +=
 			nextLayerNeurons.at(this->neuronData.Connections[j].output).neuronData.error*
 			this->neuronData.Connections[j].weight;
 	}
 	test = FString::SanitizeFloat(returnValue);
 	UE_LOG(LogTemp, Warning, TEXT("Sum of Weights * Error from Calculation: %s"), *test);
+
+
 	this->neuronData.sumErrorWeights = returnValue;
 	return returnValue;
 }
@@ -101,15 +108,8 @@ float Neuron::CalculateErrorTerms(std::vector<Neuron> nextLayerNeurons) {
 	
 	float errorTerm = CalculateSumWeightsError(nextLayerNeurons);
 	switch (neuronData.type) {
-	case NeuronType::Input:
-		test = FString::SanitizeFloat(neuronData.value);
 
-		UE_LOG(LogTemp, Warning, TEXT("Neuron is in Input Layer. Value is: %s"), *test);
-		// Error Term = input * sum of (weight to next layer * error term in next layer)
-		errorTerm *= neuronData.value;
-		break;
-
-
+		// Only needs this for Hidden Layer as Input doens't have an error gradient and Output has it's own calculation
 	case NeuronType::Hidden:
 
 		test = FString::SanitizeFloat(GetDerivedValue());
@@ -117,6 +117,9 @@ float Neuron::CalculateErrorTerms(std::vector<Neuron> nextLayerNeurons) {
 	
 		// Error Term = derivation of sigmoid * sum of (weight to next layer * error term in next layer)
 		errorTerm *= GetDerivedValue();
+
+		test = FString::SanitizeFloat(errorTerm);
+		UE_LOG(LogTemp, Warning, TEXT("Error Term is: %s"), *test);
 		break;
 
 	}

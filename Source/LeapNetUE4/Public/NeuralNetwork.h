@@ -115,11 +115,11 @@ public:
 		
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		/** Used for initialisation */
-		bool bRandomiseWeights = true;
+		bool bRandomiseWeights = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		/** Quick way to disable the bias for development purposes */
-		bool bEnableBias = true;
+		bool bEnableBias = false;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		bool bOverwriteTheta;
@@ -128,10 +128,13 @@ public:
 		// Threshold value for activation function
 		float theta = 0.2f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		// Activation Function for all neurons (uninitialised and initialised)
+		TEnumAsByte<ActivationFunction> activationFunction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		// Learning rate of the network
-		float alpha = 0.01f;
+		float alpha = 0.1f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		/** Name of the Current topology. Change before saving and loading to get the appropriate results */

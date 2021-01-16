@@ -2,6 +2,13 @@
 #include "NN_Structs.generated.h"
 
 UENUM(BlueprintType)
+enum ActivationFunction {
+	Sigmoid UMETA(DisplayName = "Sigmoid"),
+	TanhActivation UMETA(DisplayName = "Tanh")
+};
+
+
+UENUM(BlueprintType)
 enum NeuronType {
 	Input,
 	Hidden,
@@ -47,6 +54,8 @@ struct FNeuron {
 		float value;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		float theta;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TEnumAsByte<ActivationFunction> activationFunction;
 
 	NeuronType type;
 	float error;

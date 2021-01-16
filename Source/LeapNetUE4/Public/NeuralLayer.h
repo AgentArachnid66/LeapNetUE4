@@ -39,6 +39,7 @@ public:
 	* Feeds the values from this layer into the next one
 	* @param &nextLayer - A reference to the next layer in the network so this layer can access those neurons. MUST BE STOPPED BEFORE LAST LAYER TRIES TO FEED TO LAYER THAT DOESN'T EXIST
 	* @param theta - Threshold value for the neuron's activation and derivation functions
+	* @param bEnableBias - Boolean to check if the functions should take into account the existence of a bias neuron
 	* @return Whether the feed forward for this layer was successful
 	*/
 	bool FeedForward(NeuralLayer &nextLayer, FNeuralLayer &Topology, bool bEnableBias);
@@ -49,8 +50,10 @@ public:
 	* @param alpha - Learning rate of the network
 	* @param target - What the target was for this round of training
 	* @param &prevLayerData - Reference to the previous layer's data structure so that can be updated when needed
+	* @param &currentLayerData - Reference to the current layer's data structure so it can be updated when needed
+	* @param bEnableBias - Boolean to check to see if the function should take in the existence of a bias neuron into account
 	*/
-	void BackPropagate(NeuralLayer &prevLayer, float alpha, FNeuralLayer &prevLayerData, bool bEnableBias);
+	void BackPropagate(NeuralLayer &prevLayer, float alpha, FNeuralLayer &prevLayerData,FNeuralLayer &currentLayerData,bool bEnableBias);
 
 	/**
 	* Easy way to update the neuron data on this layer when needed

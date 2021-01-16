@@ -128,13 +128,16 @@ bool UNeuralNetwork::Train(TArray<float> inputs, TArray<float> targets ) {
 			
 			else {
 				neuralLayers.back().neurons.at(output).neuronData.error = targets[output] - neuralLayers.back().neurons.at(output).GetActivatedValue();
+				test = FString::SanitizeFloat(neuralLayers.back().neurons.at(output).neuronData.error);
+				UE_LOG(LogTemp, Warning, TEXT("Output Neuron has error of: %s"), *test);
+				
 				neuralLayers.back().neurons.at(output).neuronData.error *= neuralLayers.back().neurons.at(output).GetDerivedValue();
 				
 				errorTotal += 0.5f * FMath::Pow((targets[output] - neuralLayers.back().neurons.at(output).GetActivatedValue()), 2.f);
 
 
 				test = FString::SanitizeFloat(neuralLayers.back().neurons.at(output).neuronData.error);
-				UE_LOG(LogTemp, Warning, TEXT("Neuron has error of: %s"), *test);
+				UE_LOG(LogTemp, Warning, TEXT("Output Neuron Error Term: %s"), *test);
 
 				test = FString::SanitizeFloat(targets[output]);
 				UE_LOG(LogTemp, Warning, TEXT("Target for this neuron: %s"), *test);
@@ -156,7 +159,7 @@ bool UNeuralNetwork::Train(TArray<float> inputs, TArray<float> targets ) {
 		for (int layer = this->Topology.Num() - 1; layer > 0; layer--) {
 			test = FString::FromInt(layer);
 			UE_LOG(LogTemp, Warning, TEXT("Layer %s Started Back Propagation"), *test);
-			neuralLayers.at(layer).BackPropagate(neuralLayers.at(layer - 1), this->alpha, this->Topology[layer - 1], this->bEnableBias);
+			neuralLayers.at(layer).BackPropagate(neuralLayers.at(layer - 1), this->alpha, this->Topology[layer - 1],this->Topology[layer] ,this->bEnableBias);
 		}
 		return true;
 	}

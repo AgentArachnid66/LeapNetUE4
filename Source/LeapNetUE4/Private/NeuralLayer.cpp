@@ -127,24 +127,24 @@ bool NeuralLayer::FeedForward(NeuralLayer &nextLayer, FNeuralLayer &Topology, bo
 
 }
 
-void NeuralLayer::BackPropagate(NeuralLayer &prevLayer, float alpha, FNeuralLayer &prevLayerData, bool bEnableBias) {
+void NeuralLayer::BackPropagate(NeuralLayer &prevLayer, float alpha, FNeuralLayer &prevLayerData, FNeuralLayer &currentLayerData, bool bEnableBias) {
 	FString test;
 
 
 	test = FString::FromInt(prevLayer.layerNum);
 
-	UE_LOG(LogTemp, Warning, TEXT("############## Layer %s ###########"), *test);
+	UE_LOG(LogTemp, Warning, TEXT("#################### Layer %s ####################"), *test);
 
-
+	// Container for when I change the theta values
 	vector<bool> visited(neurons.size(), false);
 
 	for (int neuron = 0; neuron < prevLayer.neurons.size(); neuron++) {
 
 		test = FString::FromInt(neuron);
-		UE_LOG(LogTemp, Warning, TEXT("############## Neuron %s ###########"), *test);
+		UE_LOG(LogTemp, Warning, TEXT("############### Neuron %s ###############"), *test);
 
-		float theta = prevLayer.neurons.at(neuron).neuronData.theta;
 
+		// Calculates the error term for the hidden layer for when it back propagates
 		prevLayer.neurons.at(neuron).CalculateErrorTerms(this->neurons);
 
 		// Now we know the error term of this neuron we can work out how to change the weights
@@ -161,7 +161,7 @@ void NeuralLayer::BackPropagate(NeuralLayer &prevLayer, float alpha, FNeuralLaye
 
 
 			// Safety check to make sure that the neuron that this is outputting to exists
-			if (errorNeuron < this->neurons.size()) {
+			if ((errorNeuron < this->neurons.size())&(errorNeuron>=0)) {
 
 				// If it is a hidden layer then take the activated value
 				// Otherwise (ie if it is an input layer or a bias neuron than the normal value)
@@ -175,15 +175,11 @@ void NeuralLayer::BackPropagate(NeuralLayer &prevLayer, float alpha, FNeuralLaye
 					test = FString::SanitizeFloat(value);
 
 					if ((neuron == prevLayer.neurons.size() - 1) & (bEnableBias)) {
-
-
-						UE_LOG(LogTemp, Warning, TEXT("Bias Neuron is in the Input Layer. Value is %s"),*test);
+						UE_LOG(LogTemp, Warning, TEXT("Bias Neuron is in the Input Layer. Value is %s"), *test);
 					}
 
 					else {
-
-
-						UE_LOG(LogTemp, Warning, TEXT("Neuron is in the Input Layer. Value is %s"),*test);
+						UE_LOG(LogTemp, Warning, TEXT("Neuron is in the Input Layer. Value is %s"), *test);
 					}
 					break;
 
@@ -194,7 +190,7 @@ void NeuralLayer::BackPropagate(NeuralLayer &prevLayer, float alpha, FNeuralLaye
 						value = prevLayer.neurons.at(neuron).neuronData.value;
 
 						test = FString::SanitizeFloat(value);
-						UE_LOG(LogTemp, Warning, TEXT("Bias Neuron is in the Input Layer. Value is %s"),*test);
+						UE_LOG(LogTemp, Warning, TEXT("Bias Neuron is in the Input Layer. Value is %s"), *test);
 					}
 
 					else {
@@ -202,7 +198,7 @@ void NeuralLayer::BackPropagate(NeuralLayer &prevLayer, float alpha, FNeuralLaye
 						value = prevLayer.neurons.at(neuron).GetActivatedValue();
 
 						test = FString::SanitizeFloat(value);
-						UE_LOG(LogTemp, Warning, TEXT("Neuron is in the Hidden Layer. Activated Value is %s"),*test);
+						UE_LOG(LogTemp, Warning, TEXT("Neuron is in the Hidden Layer. Activated Value is %s"), *test);
 					}
 					break;
 
@@ -225,19 +221,11 @@ void NeuralLayer::BackPropagate(NeuralLayer &prevLayer, float alpha, FNeuralLaye
 					this->neurons.at(errorNeuron).neuronData.error;
 
 				// Debug Messages
-				test = FString::SanitizeFloat(prevLayer.neurons.at(neuron).GetDerivedValue());
-				UE_LOG(LogTemp, Warning, TEXT("Derived Value: %s"), *test);
-
-
-
-
-
+				test = FString::SanitizeFloat(this->neurons.at(errorNeuron).neuronData.error);
+				UE_LOG(LogTemp, Warning, TEXT("Error Term: %s"), *test);
 
 				test = FString::SanitizeFloat(value);
 				UE_LOG(LogTemp, Warning, TEXT("Value: %s"), *test);
-
-				test = FString::SanitizeFloat(this->neurons.at(errorNeuron).neuronData.sumErrorWeights);
-				UE_LOG(LogTemp, Warning, TEXT("Sum of Error and Weights: %s"), *test);
 
 				test = FString::SanitizeFloat(newWeight);
 				UE_LOG(LogTemp, Warning, TEXT("Delta Weight: %s"), *test);
@@ -263,13 +251,14 @@ void NeuralLayer::BackPropagate(NeuralLayer &prevLayer, float alpha, FNeuralLaye
 					this->neurons.at(errorNeuron).neuronData.theta +=
 						-1.f *
 						alpha *
-						this->neurons.at(errorNeuron).neuronData.sumErrorWeights;
+						this->neurons.at(errorNeuron).neuronData.error;
 
 					// Outputs the new theta value
 					test = FString::SanitizeFloat(this->neurons.at(errorNeuron).neuronData.theta);
 					UE_LOG(LogTemp, Warning, TEXT("New Theta: %s"), *test);
 
-
+					// Updates the UI to get the new Theta value
+					currentLayerData.NeuronsInLayer[errorNeuron].theta = this->neurons.at(errorNeuron).neuronData.theta;
 
 					visited.at(errorNeuron) = true;
 				}
