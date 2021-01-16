@@ -30,4 +30,11 @@ In addition to the above changes, I would also like to add some additionaly safe
 
 Back propagation is still a work in progress, but it's so nearly there. I've made it adjust the delta weights appropriately and apply them, and also calculate the correct delta theta (threshold value) for each neuron. My next step is getting the delta theta applied to the right neurons. After that, see what I can do to optimise the network and make it as easy as possible for users to train the network. I'm thinking of a main function that handles the iteration in a separate thread, with a single input of a data set to perform the training with. I'll implement the different activation functions after this step.
 
-One thing I haven't tested yet is how it handles the bias neurons. This is obviously something I need to check works, but this will come after I have the delta Theta working. 
+One thing I haven't tested yet is how it handles the bias neurons. This is obviously something I need to check works, but this will come after I have the delta Theta working.
+
+</n>
+<b> 15/01/2021 Commit Update </b>
+
+Delta weights and theta values are adjusting according to what previous calculations for one data set, but after setting it to train over the course of several hundread epochs, it still isn't learning and is instead converging to 0.5 regardless of input. I'll do some more calculations for the other 3 data sets to see what results the network should give me for those and compare them. I hope it is a quick and simple fix, though when is it that easy.
+
+In brighter news, I've added in the enum to select other activation functions and although I haven't implemented the function itself, each neuron can have a different activation function. 
