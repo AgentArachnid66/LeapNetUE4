@@ -8,8 +8,14 @@ The neural network is an actor component that can be attached to any actor that 
 
 The leap motion data collector uses the forward vector data to avoid issues with differently sized hands and distance from the controller so these don't affect the training of the neural network.
 
+<b> User Manual </b>
 
-To use, after adding elements to the base topology array or changing any element of the Topology array, you must call the initialise function. To train and test, you must call them in the parent actor that you choose to attach it to, with the relevant input and target values.
+To use, after adding elements to the base topology array, changing any element of the Topology array or load in a new topology, you must call the initialise function. To train and test, you must call them in the parent actor that you choose to attach it to, with the relevant input and target values.
+
+The initialise function must be called to transform the Topology variable in the editor into a neural network object to be used.
+
+For more information on how to use this repository please visit here (docs are a work in progress):
+https://www.notion.so/Leap-Net-UE4-79b423b5958c45b79a836b83b6ed8ea7
 
 </n>
 <b> 13/01/2021 Commit Update </b>
@@ -38,3 +44,8 @@ One thing I haven't tested yet is how it handles the bias neurons. This is obvio
 Delta weights and theta values are adjusting according to what previous calculations for one data set, but after setting it to train over the course of several hundread epochs, it still isn't learning and is instead converging to 0.5 regardless of input. I'll do some more calculations for the other 3 data sets to see what results the network should give me for those and compare them. I hope it is a quick and simple fix, though when is it that easy.
 
 In brighter news, I've added in the enum to select other activation functions and although I haven't implemented the function itself, each neuron can have a different activation function. 
+
+</n>
+<b> 16/01/2021 Commit Update </b>
+
+Training still isn't working, despite continuous efforts to figure out what's going wrong. I quickly implemented some more groundwork for the multiple activation functions, all I need to do now is to actually implement them. 
