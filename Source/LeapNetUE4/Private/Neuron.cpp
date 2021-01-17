@@ -57,6 +57,11 @@ Neuron::~Neuron()
 }
 
 float Neuron::GetActivatedValue() {
+
+	if (this->neuronData.activationFunction == ActivationFunction::TanhActivation) {
+		UE_LOG(LogTemp, Warning, TEXT("Tanh Activation Function not implemented yet. Defaulting to Sigmoid"));
+	}
+
 	float x = this->neuronData.value - this->neuronData.theta;
 	return 1 / (1 + exp(-x));
 }

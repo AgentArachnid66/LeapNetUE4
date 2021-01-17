@@ -84,7 +84,7 @@ void UNeuralNetwork::Initialise() {
 	for (int layer = 0; layer < this->Topology.Num(); layer++) {
 		test = FString::FromInt(layer);
 		UE_LOG(LogTemp, Warning, TEXT("Added Layer: %s"), *test);
-		neuralLayers.push_back(NeuralLayer(this->Topology[layer], this->bRandomiseWeights, layer));
+		neuralLayers.push_back(NeuralLayer(this->Topology[layer], this->bRandomiseWeights, layer, this->activationFunction));
 	}
 
 	UE_LOG(LogTemp, Warning, TEXT("Finished Neural Network Setup"));
@@ -137,7 +137,7 @@ bool UNeuralNetwork::Train(TArray<float> inputs, TArray<float> targets ) {
 
 
 				test = FString::SanitizeFloat(neuralLayers.back().neurons.at(output).neuronData.error);
-				UE_LOG(LogTemp, Warning, TEXT("Output Neuron Error Term: %s"), *test);
+				UE_LOG(LogTemp, Warning, TEXT("//// Output Neuron Error Term: %s ////"), *test);
 
 				test = FString::SanitizeFloat(targets[output]);
 				UE_LOG(LogTemp, Warning, TEXT("Target for this neuron: %s"), *test);
@@ -265,7 +265,7 @@ void UNeuralNetwork::LoadTopology(FString customTopologyName, FString customSlot
 			for (int layer = 0; layer < this->Topology.Num(); layer++) {
 				test = FString::FromInt(layer);
 				UE_LOG(LogTemp, Warning, TEXT("Added Layer: %s"), *test);
-				neuralLayers.push_back(NeuralLayer(this->Topology[layer], this->bRandomiseWeights, layer));
+				neuralLayers.push_back(NeuralLayer(this->Topology[layer], this->bRandomiseWeights, layer, this->activationFunction));
 			}
 		}
 

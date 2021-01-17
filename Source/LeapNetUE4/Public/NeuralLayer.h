@@ -22,7 +22,7 @@ public:
 	* @param layerNumber - The index of this layer in the Topology
 	* @return NeuralLayer
 	*/
-	NeuralLayer(FNeuralLayer &layerInfo, bool randomiseWeights, int layerNumber);
+	NeuralLayer(FNeuralLayer &layerInfo, bool randomiseWeights, int layerNumber, ActivationFunction active);
 	~NeuralLayer();
 
 	/** This Layer's data */
@@ -69,4 +69,10 @@ public:
 	* @return Whether the input values were set correctly
 	*/
 	bool SetInputValues(TArray<float> inputs, bool bEnableBias);
+
+	/**
+	* Sets the Activation Function for each neuron in this layer
+	* @param active - The new active activation function
+	*/
+	void SetActivation(ActivationFunction active);
 };

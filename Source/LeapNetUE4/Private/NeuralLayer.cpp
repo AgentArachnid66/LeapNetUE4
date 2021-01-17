@@ -3,7 +3,7 @@
 
 #include "NeuralLayer.h"
 
-NeuralLayer::NeuralLayer(FNeuralLayer &layerInfo, bool randomiseWeights, int layerNumber)
+NeuralLayer::NeuralLayer(FNeuralLayer &layerInfo, bool randomiseWeights, int layerNumber, ActivationFunction active)
 {
 	this->layerData = layerInfo;
 	this->layerNum = layerNumber;
@@ -22,6 +22,8 @@ NeuralLayer::NeuralLayer(FNeuralLayer &layerInfo, bool randomiseWeights, int lay
 
 		this->neurons.back().neuronData.type = layerNumber == 0 ? NeuronType::Input : this->neurons.back().neuronData.Connections.Num() > 0 ? NeuronType::Hidden : NeuronType::Output;
 
+		// Sets the default activation to the active activation
+		this->neurons.back().neuronData.activationFunction = active;
 
 		// Updates the UI
 		layerInfo.NeuronsInLayer[neuron] = this->neurons.back().neuronData;
@@ -29,6 +31,14 @@ NeuralLayer::NeuralLayer(FNeuralLayer &layerInfo, bool randomiseWeights, int lay
 
 	
 }
+
+void NeuralLayer::SetActivation(ActivationFunction active) {
+	for (int i = 0; i < this->neurons.size(); i++) {
+		this->neurons.at(i).neuronData.activationFunction = active;
+	}
+
+}
+
 
 void NeuralLayer::UpdateNeurons(FNeuralLayer &layerInfo, bool randomiseWeights) {
 	FString test;
