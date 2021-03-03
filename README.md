@@ -49,3 +49,8 @@ In brighter news, I've added in the enum to select other activation functions an
 <b> 16/01/2021 Commit Update </b>
 
 Training still isn't working, despite continuous efforts to figure out what's going wrong. I quickly implemented some more groundwork for the multiple activation functions, all I need to do now is to actually implement them. 
+
+</n>
+<b> 03/03/2021 Commit Update </b>
+
+So I decided to develop a separate application in Python that will handle the training and all this project needs to do is be able to read in the correct weights and it should work appropriately. That Python project is not yet ready to be released, as I still need to implement a few more features. I will not just abandon this project when I'm so close.
